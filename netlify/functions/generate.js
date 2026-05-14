@@ -52,7 +52,7 @@ Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier s
 
     const geminiRes = await post(
       "generativelanguage.googleapis.com",
-      `/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+      `/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       { "Content-Type": "application/json" },
       { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 1500 } }
     );
