@@ -118,8 +118,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sr-lbl{font-size:14px;color:var(--text)}
 .sr-sub{font-size:12px;color:var(--text2);margin-top:1px}
 .sr-val{font-size:13px;color:var(--gold)}
-
-/* Login modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal-overlay.show{display:flex}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px;width:100%;max-width:360px;animation:up .2s ease}
@@ -132,20 +130,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .modal-btns{display:flex;gap:8px;margin-top:20px}
 .modal-btn{flex:1;height:40px;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:none}
 .modal-btn.primary{background:var(--gold);color:#0f0f0f}
-.modal-btn.primary:active{opacity:.85}
 .modal-btn.secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
-
-/* Admin panel */
 .admin-section{background:var(--bg2);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
 .admin-section .ss-title{color:var(--gold)}
-.color-preview{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);flex-shrink:0}
 .custom-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);outline:none;margin-top:6px}
 .custom-inp:focus{border-color:var(--gold)}
 .save-settings-btn{width:100%;height:40px;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;margin-top:8px}
-.save-settings-btn:active{opacity:.85}
 .logout-btn{width:100%;height:40px;background:none;color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:var(--r2);font-family:var(--font);font-size:13px;cursor:pointer;margin-top:8px}
-
-/* Install banner */
 .ib{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.25);border-radius:var(--r);padding:16px;margin-bottom:16px;display:none}
 .ib.show{display:block}
 .ib-title{font-family:var(--font-serif);font-size:15px;color:var(--gold);margin-bottom:6px}
@@ -156,7 +147,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </head>
 <body>
 
-<!-- Login Modal -->
 <div id="login-modal" class="modal-overlay">
   <div class="modal">
     <h2>Connexion Admin</h2>
@@ -186,7 +176,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
   </div>
 
-  <!-- Panel Recherche -->
   <div id="p-search" class="panel on">
     <div class="search-wrap">
       <div class="search-lbl">Numéro de pourvoi</div>
@@ -206,17 +195,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div id="out"></div>
   </div>
 
-  <!-- Panel Historique -->
   <div id="p-hist" class="panel">
     <div class="pg-title">Historique</div>
     <div id="hist-list"></div>
   </div>
 
-  <!-- Panel Réglages -->
   <div id="p-settings" class="panel">
     <div class="pg-title">Réglages</div>
-
-    <!-- Admin : personnalisation interface -->
     <div id="admin-panel" style="display:none">
       <div class="admin-section">
         <div class="ss-title">✨ Personnalisation</div>
@@ -262,12 +247,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <button class="save-settings-btn" onclick="saveSettings()">💾 Sauvegarder l'apparence</button>
         </div>
       </div>
-
       <div class="admin-section">
         <div class="ss-title">🧠 Apprentissage partagé</div>
         <div class="sr">
           <span class="sr-ic">📊</span>
-          <div class="sr-info"><div class="sr-lbl">Fiches validées (partagées)</div><div class="sr-sub">Bénéficient à tous les utilisateurs</div></div>
+          <div class="sr-info"><div class="sr-lbl">Fiches validées</div><div class="sr-sub">Bénéficient à tous les utilisateurs</div></div>
           <span class="sr-val" id="ex-count-shared">—</span>
         </div>
         <div class="sr" style="cursor:pointer" onclick="clearSharedEx()">
@@ -275,13 +259,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <div class="sr-info"><div class="sr-lbl" style="color:#e74c3c">Effacer tous les exemples</div></div>
         </div>
       </div>
-
       <div style="padding:0 0 14px">
         <button class="logout-btn" onclick="doLogout()">Se déconnecter</button>
       </div>
     </div>
-
-    <!-- Install banner iOS -->
     <div id="ib" class="ib">
       <div class="ib-title">📲 Installer sur iPhone</div>
       <div class="ib-text">Ajoutez FicheArrêt sur votre écran d'accueil :</div>
@@ -291,7 +272,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="ib-step"><span class="ib-num">3</span><span>Appuyez sur <strong>Ajouter</strong></span></div>
       </div>
     </div>
-
     <div class="ss">
       <div class="ss-title">À propos</div>
       <div class="sr">
@@ -313,31 +293,36 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </nav>
 
 <script>
-// ── Supabase ─────────────────────────────────────────────────────────────────
-const SUPABASE_URL = 'https://cwzmossvqigcajoomouu.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3em1vc3N2cWlnY2Fqb29tb3V1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NDQxMjgsImV4cCI6MjA5NDQyMDEyOH0.mq6OrKu-k3p45PDEvV7bossyUMw2olfZfxup5qDACvc';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
+var sb = null;
 var cf = null, cp = '', isAdmin = false;
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Init : charge la config depuis la fonction Netlify ────────────────────────
 async function init() {
-  // Vérifier session admin
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) setAdmin(true);
+  try {
+    const res = await fetch('/.netlify/functions/config');
+    const cfg = await res.json();
+    sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
 
-  // Charger les réglages depuis Supabase
-  await loadSettings();
+    // Vérifier session admin
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) setAdmin(true);
 
-  // Écouter les changements de réglages en temps réel
-  sb.channel('settings-changes')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
-      applySettings(payload.new);
-    })
-    .subscribe();
+    // Charger les réglages
+    await loadSettings();
+
+    // Écouter les changements en temps réel
+    sb.channel('settings-live')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
+        applySettings(payload.new);
+      })
+      .subscribe();
+
+  } catch(e) {
+    console.error('Init failed:', e);
+  }
 }
 
-// ── Auth admin ────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 function showLogin() {
   if (isAdmin) { doLogout(); return; }
   document.getElementById('login-modal').classList.add('show');
@@ -350,13 +335,8 @@ async function doLogin() {
   const pwd = document.getElementById('login-pwd').value;
   const errEl = document.getElementById('login-error');
   errEl.style.display = 'none';
-
   const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) {
-    errEl.textContent = 'Email ou mot de passe incorrect.';
-    errEl.style.display = 'block';
-    return;
-  }
+  if (error) { errEl.textContent = 'Email ou mot de passe incorrect.'; errEl.style.display = 'block'; return; }
   setAdmin(true);
   closeLogin();
   nav('settings');
@@ -381,14 +361,14 @@ async function loadSharedExCount() {
 }
 
 async function clearSharedEx() {
-  if (!confirm('Effacer tous les exemples partagés ? Le modèle repartira de zéro.')) return;
+  if (!confirm('Effacer tous les exemples partagés ?')) return;
   await sb.from('exemples').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   document.getElementById('ex-count-shared').textContent = 0;
   showSt('Exemples effacés.', 'ok');
   setTimeout(() => showSt('', ''), 2000);
 }
 
-// ── Réglages / personnalisation ───────────────────────────────────────────────
+// ── Réglages ──────────────────────────────────────────────────────────────────
 async function loadSettings() {
   const { data } = await sb.from('settings').select('*').eq('id', 1).single();
   if (data) applySettings(data);
@@ -408,17 +388,11 @@ function applySettings(s) {
     document.getElementById('set-bg-hex').value = s.bg_color;
   }
   if (s.font) {
-    document.documentElement.style.setProperty('--font', `'${s.font}', sans-serif`);
+    document.documentElement.style.setProperty('--font', "'"+s.font+"', sans-serif");
     document.getElementById('set-font').value = s.font;
   }
   if (s.app_name) {
-    const parts = s.app_name.match(/^(.+?)(Arrêt|Arret|arrêt)?$/i);
-    const logo = document.getElementById('app-logo');
-    if (parts && parts[2]) {
-      logo.innerHTML = parts[1] + '<span>' + parts[2] + '</span>';
-    } else {
-      logo.innerHTML = s.app_name;
-    }
+    document.getElementById('app-logo').innerHTML = s.app_name.replace(/(Arrêt|Arret)/i, '<span>$1</span>');
     document.getElementById('about-name').textContent = s.app_name;
     document.getElementById('set-name').value = s.app_name;
     document.title = s.app_name;
@@ -430,36 +404,17 @@ async function saveSettings() {
   const bg = document.getElementById('set-bg-hex').value || document.getElementById('set-bg').value;
   const font = document.getElementById('set-font').value;
   const name = document.getElementById('set-name').value || 'FicheArrêt';
-
-  const { error } = await sb.from('settings').update({
-    accent_color: accent,
-    bg_color: bg,
-    font: font,
-    app_name: name
-  }).eq('id', 1);
-
-  if (error) {
-    showSt('Erreur lors de la sauvegarde.', 'error');
-  } else {
-    applySettings({ accent_color: accent, bg_color: bg, font, app_name: name });
-    showSt('Apparence sauvegardée — visible par tous immédiatement.', 'ok');
-    setTimeout(() => showSt('', ''), 3000);
-  }
+  const { error } = await sb.from('settings').update({ accent_color: accent, bg_color: bg, font, app_name: name }).eq('id', 1);
+  if (error) { showSt('Erreur : ' + error.message, 'error'); return; }
+  applySettings({ accent_color: accent, bg_color: bg, font, app_name: name });
+  showSt('Apparence sauvegardée — visible par tous immédiatement.', 'ok');
+  setTimeout(() => showSt('', ''), 3000);
 }
 
-// Sync color picker <-> text input
-document.getElementById('set-accent').addEventListener('input', function() {
-  document.getElementById('set-accent-hex').value = this.value;
-});
-document.getElementById('set-accent-hex').addEventListener('input', function() {
-  if (/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-accent').value = this.value;
-});
-document.getElementById('set-bg').addEventListener('input', function() {
-  document.getElementById('set-bg-hex').value = this.value;
-});
-document.getElementById('set-bg-hex').addEventListener('input', function() {
-  if (/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-bg').value = this.value;
-});
+document.getElementById('set-accent').addEventListener('input', function() { document.getElementById('set-accent-hex').value = this.value; });
+document.getElementById('set-accent-hex').addEventListener('input', function() { if(/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-accent').value = this.value; });
+document.getElementById('set-bg').addEventListener('input', function() { document.getElementById('set-bg-hex').value = this.value; });
+document.getElementById('set-bg-hex').addEventListener('input', function() { if(/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-bg').value = this.value; });
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function nav(p) {
@@ -471,7 +426,6 @@ function nav(p) {
   if (p==='settings' && isAdmin) loadSharedExCount();
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
 function showSt(msg, type) {
   var el = document.getElementById('status');
   if (!msg) { el.className='status'; el.innerHTML=''; return; }
@@ -487,12 +441,10 @@ async function go() {
   var pourvoi = document.getElementById('inp').value.trim();
   if (!pourvoi) return;
   var btn = document.getElementById('goBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> En cours…';
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…';
   document.getElementById('out').innerHTML = '';
   showSt('Génération de la fiche en cours…', 'loading');
   cp = pourvoi;
-
   try {
     var res = await fetch('/.netlify/functions/generate', {
       method: 'POST',
@@ -504,11 +456,8 @@ async function go() {
     cf = data.fiche;
     render(data.fiche, pourvoi);
     showSt('', '');
-  } catch(e) {
-    showSt(e.message || 'Erreur.', 'error');
-  }
-  btn.disabled = false;
-  btn.innerHTML = '⚡ Générer';
+  } catch(e) { showSt(e.message || 'Erreur.', 'error'); }
+  btn.disabled = false; btn.innerHTML = '⚡ Générer';
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -530,16 +479,11 @@ function render(f, pourvoi) {
     var inner = s.q
       ? '<div class="sec-txt q" id="c-'+s.k+'">'+esc(val)+'</div>'
       : '<div class="sec-txt" id="c-'+s.k+'">'+(s.sol?bdg+' ':'')+esc(val)+'</div>';
-    var editBtn = isAdmin
-      ? '<div class="edit-row"><button class="edit-sm" onclick="startEd(\''+s.k+'\',event)">✏️ Modifier</button></div>'
-      : '';
+    var editBtn = isAdmin ? '<div class="edit-row"><button class="edit-sm" onclick="startEd(\''+s.k+'\',event)">✏️ Modifier</button></div>' : '';
     return '<div class="sec'+(i===0?' open':'')+'" id="sec-'+s.k+'">'
       +'<div class="sec-hd" onclick="tgl(\''+s.k+'\')">'
-      +'<span class="sec-ic">'+s.ic+'</span>'
-      +'<span class="sec-lbl">'+s.l+'</span>'
-      +'<span class="sec-chev">▼</span>'
-      +'</div>'
-      +'<div class="sec-body">'+editBtn+inner
+      +'<span class="sec-ic">'+s.ic+'</span><span class="sec-lbl">'+s.l+'</span><span class="sec-chev">▼</span>'
+      +'</div><div class="sec-body">'+editBtn+inner
       +'<textarea class="edit-area" id="e-'+s.k+'">'+esc(val)+'</textarea>'
       +'<div class="sv-row" id="sr-'+s.k+'">'
       +'<button class="sv-btn" onclick="saveEd(\''+s.k+'\')">Enregistrer</button>'
@@ -556,117 +500,82 @@ function render(f, pourvoi) {
     : '<div class="val-bar"><div class="val-locked">🔐 Seul l\'admin peut valider les fiches</div></div>';
 
   document.getElementById('out').innerHTML =
-    '<div class="card">'
-    +'<div class="card-head">'
-    +'<div><h2>Pourvoi n° '+esc(pourvoi)+'</h2>'+bdg
+    '<div class="card"><div class="card-head"><div><h2>Pourvoi n° '+esc(pourvoi)+'</h2>'+bdg
     +'<p>'+esc((f.presentation||'').split('.')[0]+'.')+'</p></div>'
-    +'<div class="card-btns">'
-    +'<button class="ic-btn" onclick="cp2()" title="Copier">📋</button>'
-    +'<button class="ic-btn" onclick="shareF()" title="Partager">⬆️</button>'
-    +'</div></div>'
-    +html+valBar+'</div>';
+    +'<div class="card-btns"><button class="ic-btn" onclick="cp2()">📋</button><button class="ic-btn" onclick="shareF()">⬆️</button></div>'
+    +'</div>'+html+valBar+'</div>';
 }
 
 function tgl(k) { document.getElementById('sec-'+k).classList.toggle('open'); }
-
 function startEd(k,e) {
-  if (!isAdmin) return;
-  e.stopPropagation();
+  if(!isAdmin)return; e.stopPropagation();
   var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  if(cf)ea.value=cf[k]||'';
-  c.style.display='none';ea.style.display='block';sr.style.display='flex';ea.focus();
+  if(cf)ea.value=cf[k]||''; c.style.display='none'; ea.style.display='block'; sr.style.display='flex'; ea.focus();
 }
 function saveEd(k) {
   var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  c.textContent=ea.value.trim();c.style.display='';ea.style.display='none';sr.style.display='none';
+  c.textContent=ea.value.trim(); c.style.display=''; ea.style.display='none'; sr.style.display='none';
   if(cf)cf[k]=ea.value.trim();
 }
 function cancelEd(k) {
   var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  c.style.display='';ea.style.display='none';sr.style.display='none';
+  c.style.display=''; ea.style.display='none'; sr.style.display='none';
 }
 
-// ── Validation (admin uniquement → Supabase) ──────────────────────────────────
+// ── Validation → Supabase ─────────────────────────────────────────────────────
 async function validate(type) {
   if (!isAdmin) return;
   document.getElementById('vb-good').classList.toggle('on', type==='good');
   document.getElementById('vb-bad').classList.toggle('on', type==='bad');
-
   if (type==='good' && cf) {
-    // Sauvegarder dans Supabase (partagé avec tous)
     const { error } = await sb.from('exemples').insert({
-      presentation: cf.presentation,
-      faits: cf.faits,
-      procedure: cf.procedure,
-      these: cf.these,
-      question: cf.question,
-      solution: cf.solution,
-      type_arret: cf.type_arret,
-      pourvoi: cp
+      presentation:cf.presentation, faits:cf.faits, procedure:cf.procedure,
+      these:cf.these, question:cf.question, solution:cf.solution,
+      type_arret:cf.type_arret, pourvoi:cp
     });
-
-    if (error) {
-      showSt('Erreur lors de la validation : ' + error.message, 'error');
-      return;
-    }
-
-    // Sauvegarder dans historique local
-    var h = loadHi();
-    h.unshift({ pourvoi:cp, fiche:Object.assign({},cf), date:new Date().toISOString() });
-    if(h.length>30) h=h.slice(0,30);
-    saveHi(h);
-
-    document.getElementById('vbtns').innerHTML = '<div class="val-ok">✅ Fiche validée — mémorisée pour tous</div>';
-    showSt('Fiche validée et partagée avec tous les utilisateurs !', 'ok');
-    setTimeout(function(){showSt('','');}, 3000);
+    if (error) { showSt('Erreur validation : '+error.message, 'error'); return; }
+    var h=loadHi(); h.unshift({pourvoi:cp,fiche:Object.assign({},cf),date:new Date().toISOString()});
+    if(h.length>30)h=h.slice(0,30); saveHi(h);
+    document.getElementById('vbtns').innerHTML='<div class="val-ok">✅ Fiche validée — mémorisée pour tous</div>';
+    showSt('Fiche validée et partagée avec tous !','ok');
+    setTimeout(()=>showSt('',''),3000);
     loadSharedExCount();
-
   } else if (type==='bad') {
-    showSt('Modifiez les sections souhaitées, puis revalidez.', 'loading');
-    setTimeout(function(){showSt('','');}, 2500);
+    showSt('Modifiez les sections souhaitées, puis revalidez.','loading');
+    setTimeout(()=>showSt('',''),2500);
   }
 }
 
-// ── Historique local ──────────────────────────────────────────────────────────
-function loadHi() { try { return JSON.parse(localStorage.getItem('fa_hi')||'[]'); } catch(e) { return []; } }
-function saveHi(v) { localStorage.setItem('fa_hi', JSON.stringify(v)); }
-
-function renderHist() {
-  var h=loadHi(), el=document.getElementById('hist-list');
-  if(!h.length) { el.innerHTML='<div class="hist-empty"><div class="hist-empty-ic">📚</div><div>Aucune fiche validée pour l\'instant.</div></div>'; return; }
+// ── Historique ────────────────────────────────────────────────────────────────
+function loadHi(){try{return JSON.parse(localStorage.getItem('fa_hi')||'[]')}catch(e){return[]}}
+function saveHi(v){localStorage.setItem('fa_hi',JSON.stringify(v))}
+function renderHist(){
+  var h=loadHi(),el=document.getElementById('hist-list');
+  if(!h.length){el.innerHTML='<div class="hist-empty"><div class="hist-empty-ic">📚</div><div>Aucune fiche validée pour l\'instant.</div></div>';return;}
   el.innerHTML=h.map(function(item,i){
-    var d=new Date(item.date), ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-    return '<div class="hi" onclick="loadHi2('+i+')">'
+    var d=new Date(item.date),ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    return'<div class="hi" onclick="loadHi2('+i+')">'
       +'<div class="hi-top"><span class="hi-p">Pourvoi n° '+esc(item.pourvoi)+'</span><span class="hi-d">'+ds+'</span></div>'
-      +'<div class="hi-prev">'+esc(item.fiche.presentation||'')+'</div>'
-      +'</div>';
+      +'<div class="hi-prev">'+esc(item.fiche.presentation||'')+'</div></div>';
   }).join('');
 }
-function loadHi2(i) {
-  var h=loadHi(); if(!h[i])return;
-  var item=h[i]; cf=item.fiche; cp=item.pourvoi;
-  document.getElementById('inp').value=item.pourvoi;
-  nav('search'); render(item.fiche,item.pourvoi);
+function loadHi2(i){
+  var h=loadHi();if(!h[i])return;
+  cf=h[i].fiche;cp=h[i].pourvoi;
+  document.getElementById('inp').value=h[i].pourvoi;
+  nav('search');render(h[i].fiche,h[i].pourvoi);
   document.getElementById('out').scrollIntoView({behavior:'smooth'});
 }
 
 // ── Partage ───────────────────────────────────────────────────────────────────
-function ficheText() {
+function ficheText(){
   if(!cf)return'';
   return['IDENTIFICATION\n'+(cf.presentation||''),'FAITS\n'+(cf.faits||''),'PROCÉDURE\n'+(cf.procedure||''),'THÈSE DU DEMANDEUR\n'+(cf.these||''),'QUESTION DE DROIT\n'+(cf.question||''),'SOLUTION\n'+(cf.solution||'')].join('\n\n')+'\n\nPourvoi n° '+cp;
 }
-function cp2() {
-  navigator.clipboard&&navigator.clipboard.writeText(ficheText()).then(function(){
-    showSt('Fiche copiée !','ok'); setTimeout(function(){showSt('','');},2000);
-  });
-}
-function shareF() { navigator.share?navigator.share({title:'Fiche arrêt n° '+cp,text:ficheText()}):cp2(); }
+function cp2(){navigator.clipboard&&navigator.clipboard.writeText(ficheText()).then(function(){showSt('Fiche copiée !','ok');setTimeout(function(){showSt('','');},2000);})}
+function shareF(){navigator.share?navigator.share({title:'Fiche arrêt n° '+cp,text:ficheText()}):cp2();}
 
-// ── iOS install ───────────────────────────────────────────────────────────────
-if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.navigator.standalone) {
-  document.getElementById('ib').classList.add('show');
-}
-
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.navigator.standalone) document.getElementById('ib').classList.add('show');
 document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
 document.getElementById('login-pwd').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 
