@@ -35,6 +35,93 @@ function get(hostname, path, headers) {
   });
 }
 
+// ── Token cache ───────────────────────────────────────────────────────────────
+let cachedToken = null;
+let tokenExpiry = 0;
+
+async function getPisteToken() {
+  if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
+  const CLIENT_ID = process.env.PISTE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.PISTE_CLIENT_SECRET;
+  if (!CLIENT_ID || !CLIENT_SECRET) throw new Error("Clés PISTE manquantes");
+  const form = `grant_type=client_credentials&client_id=${encodeURIComponent(CLIENT_ID)}&client_secret=${encodeURIComponent(CLIENT_SECRET)}&scope=openid`;
+  const res = await post("sandbox-oauth.piste.gouv.fr", "/api/oauth/token",
+    { "Content-Type": "application/x-www-form-urlencoded" },
+    form
+  );
+  if (res.status !== 200) throw new Error("OAuth PISTE " + res.status);
+  cachedToken = res.body.access_token;
+  tokenExpiry = Date.now() + (res.body.expires_in || 3600) * 1000 - 30000;
+  return cachedToken;
+}
+
+// ── Légifrance JURI search ────────────────────────────────────────────────────
+async function fetchFromLegifrance(pourvoi) {
+  const token = await getPisteToken();
+
+  // Recherche par numéro de pourvoi dans l'API Légifrance JURI
+  const searchBody = {
+    recherche: {
+      champs: [
+        {
+          typeChamp: "NUM_AFFAIRE",
+          criteres: [{ typeRecherche: "EXACTE", valeur: pourvoi }],
+          operateur: "ET"
+        }
+      ],
+      filtres: [{ facette: "TYPE_DECISION", valeurs: ["Arrêt"] }],
+      pageNumber: 1,
+      pageSize: 1,
+      sort: "PERTINENCE",
+      typePagination: "STANDARD"
+    },
+    fond: "JURI"
+  };
+
+  const searchRes = await post(
+    "sandbox-api.piste.gouv.fr",
+    "/dila/legifrance/lf-engine-app/search",
+    {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    searchBody
+  );
+
+  if (searchRes.status !== 200) throw new Error("Légifrance search " + searchRes.status);
+
+  const results = searchRes.body.results || [];
+  if (!results.length) throw new Error("Décision introuvable sur Légifrance");
+
+  const id = results[0].id || results[0].cid;
+  if (!id) throw new Error("ID décision introuvable");
+
+  // Récupérer le texte complet
+  const detailRes = await post(
+    "sandbox-api.piste.gouv.fr",
+    "/dila/legifrance/lf-engine-app/consult/juri",
+    {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    { id }
+  );
+
+  if (detailRes.status !== 200) throw new Error("Légifrance detail " + detailRes.status);
+
+  const d = detailRes.body;
+  return {
+    text: d.text || d.texte || d.contenu || "",
+    date: d.dateDecision || d.date || "",
+    chamber: d.formation || d.chambre || "",
+    solution: d.solution || "",
+    titre: d.titre || ""
+  };
+}
+
+// ── Supabase examples ─────────────────────────────────────────────────────────
 async function getExamples() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
@@ -49,6 +136,7 @@ async function getExamples() {
   return Array.isArray(res.body) ? res.body : [];
 }
 
+// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -66,6 +154,18 @@ exports.handler = async (event) => {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) throw new Error("Clé Gemini manquante");
 
+    // 1. Tenter Légifrance
+    let decisionData = null;
+    let source = "model";
+    try {
+      decisionData = await fetchFromLegifrance(pourvoi);
+      source = "legifrance";
+      console.log("Légifrance OK pour", pourvoi);
+    } catch (e) {
+      console.log("Légifrance indisponible :", e.message);
+    }
+
+    // 2. Exemples Supabase
     const examples = await getExamples();
     const exPrompt = examples.length
       ? "\n\n---\nEXEMPLES DE FICHES VALIDÉES (reproduire ce style exactement) :\n" +
@@ -73,6 +173,17 @@ exports.handler = async (event) => {
           `PRÉSENTATION: ${e.presentation}\nFAITS: ${e.faits}\nPROCÉDURE: ${e.procedure}\nTHÈSE: ${e.these}\nQUESTION: ${e.question}\nSOLUTION: ${e.solution}`
         ).join("\n---\n")
       : "";
+
+    // 3. Contexte décision
+    let decisionContext = "";
+    if (decisionData && decisionData.text) {
+      decisionContext = `\n\nTEXTE OFFICIEL DE LA DÉCISION (Légifrance) :\n${decisionData.text.slice(0, 8000)}`;
+      if (decisionData.date) decisionContext += `\nDate : ${decisionData.date}`;
+      if (decisionData.chamber) decisionContext += `\nChambre : ${decisionData.chamber}`;
+      if (decisionData.solution) decisionContext += `\nSolution officielle : ${decisionData.solution}`;
+    } else {
+      decisionContext = "\n\nGénère la fiche depuis tes connaissances de cette décision. Si inconnue, indique \"À vérifier sur Légifrance\" dans les sections concernées.";
+    }
 
     const prompt = `Tu es un assistant juridique expert en droit français, spécialisé dans la rédaction de fiches d'arrêt de la Cour de cassation.
 
@@ -116,8 +227,7 @@ Format : "La [chambre] de la Cour de cassation répond par la [affirmative/néga
 ${exPrompt}
 
 ---
-Numéro de pourvoi : ${pourvoi}
-Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier sur Légifrance" mais respecte la structure.`;
+Numéro de pourvoi : ${pourvoi}${decisionContext}`;
 
     const geminiRes = await post(
       "generativelanguage.googleapis.com",
@@ -139,7 +249,7 @@ Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier s
     return {
       statusCode: 200,
       headers: cors,
-      body: JSON.stringify({ fiche, source: "model", examplesUsed: examples.length })
+      body: JSON.stringify({ fiche, source, examplesUsed: examples.length })
     };
 
   } catch (e) {
