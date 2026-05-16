@@ -66,34 +66,67 @@ exports.handler = async (event) => {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) throw new Error("Clé Gemini manquante");
 
-    // Récupérer les exemples partagés depuis Supabase
     const examples = await getExamples();
     const exPrompt = examples.length
-      ? "\n\nExemples de fiches validées par les utilisateurs (reproduire ce style exactement) :\n" +
-        examples.slice(0, 5).map((e) => JSON.stringify({
-          presentation: e.presentation,
-          faits: e.faits,
-          procedure: e.procedure,
-          these: e.these,
-          question: e.question,
-          solution: e.solution,
-          type_arret: e.type_arret
-        })).join("\n---\n")
+      ? "\n\n---\nEXEMPLES DE FICHES VALIDÉES (reproduire ce style exactement) :\n" +
+        examples.slice(0, 5).map((e) =>
+          `PRÉSENTATION: ${e.presentation}\nFAITS: ${e.faits}\nPROCÉDURE: ${e.procedure}\nTHÈSE: ${e.these}\nQUESTION: ${e.question}\nSOLUTION: ${e.solution}`
+        ).join("\n---\n")
       : "";
 
-    const prompt = `Tu es un assistant juridique expert en droit français. Tu rédiges des fiches d'arrêt de la Cour de cassation en 6 sections.
+    const prompt = `Tu es un assistant juridique expert en droit français, spécialisé dans la rédaction de fiches d'arrêt de la Cour de cassation.
 
-Réponds UNIQUEMENT avec un objet JSON valide, sans backticks, sans commentaires :
-{"presentation":"L'arrêt rendu par [chambre] de la Cour de cassation le [date] traite de [sujet].","faits":"En l'espèce, [faits pertinents, jamais la procédure].","procedure":"[Chronologie des instances, motifs, pourvoi].","these":"[Arguments du demandeur au pourvoi, articles violés allégués].","question":"[Question de droit abstraite, une phrase interrogative, sans noms propres]","solution":"La [chambre] répond par la [affirmative/négative] et [casse/rejette] au visa de [article] au motif que [motif exact].","type_arret":"cassation ou rejet"}
+## STRUCTURE OBLIGATOIRE
 
+Réponds UNIQUEMENT avec un JSON valide sans backticks :
+{"presentation":"...","faits":"...","procedure":"...","these":"...","question":"...","solution":"...","type_arret":"cassation ou rejet"}
+
+## RÈGLES PAR SECTION
+
+### 1. PRÉSENTATION
+Une seule phrase : "L'arrêt rendu par la [chambre] de la Cour de cassation le [date] traite de [sujet]."
+Ne pas révéler la solution. Rester concis.
+
+### 2. FAITS
+- Commencer par "En l'espèce,"
+- Qualifier juridiquement les parties (le créancier/le débiteur, le salarié/l'employeur, le promettant/le bénéficiaire...) — jamais de noms propres
+- Faits pertinents uniquement, conduisant au litige
+- Ne jamais mentionner la procédure judiciaire dans cette section
+
+### 3. PROCÉDURE
+- Qui a saisi quelle juridiction et pour quoi
+- Décision de première instance si connue
+- Décision et motifs de la Cour d'appel
+- Qui s'est pourvu en cassation
+
+### 4. THÈSE
+RÈGLE FONDAMENTALE selon le type d'arrêt :
+- CASSATION → exposer les motifs de la Cour d'appel que la Cour de cassation va rejeter. Commencer par "La Cour d'appel a retenu que..."
+- REJET → exposer les arguments du demandeur au pourvoi que la Cour va écarter. Commencer par "Le demandeur au pourvoi allègue que..." et mentionner les articles invoqués.
+
+### 5. QUESTION DE DROIT
+- Formulée en termes généraux et abstraits, sans aucun nom propre
+- Une seule phrase interrogative appelant oui ou non
+- Compréhensible sans avoir lu l'arrêt
+
+### 6. SOLUTION
+Format : "La [chambre] de la Cour de cassation répond par la [affirmative/négative] et [casse l'arrêt rendu par la Cour d'appel / rejette le pourvoi] [au visa de l'article X —si cassation—] au motif que [motif précis]."
+- Cassation : toujours mentionner le visa
+- Rejet : pas de visa obligatoire
+${exPrompt}
+
+---
 Numéro de pourvoi : ${pourvoi}
-Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier sur Légifrance".${exPrompt}`;
+Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier sur Légifrance" mais respecte la structure.`;
 
     const geminiRes = await post(
       "generativelanguage.googleapis.com",
       `/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
       { "Content-Type": "application/json" },
-      { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.3, maxOutputTokens: 1500 } }
+      {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 2000 }
+      }
     );
 
     if (geminiRes.status !== 200) throw new Error("Gemini " + geminiRes.status + " : " + JSON.stringify(geminiRes.body));
@@ -103,7 +136,12 @@ Génère la fiche depuis tes connaissances. Si inconnue, indique "À vérifier s
     const s = clean.indexOf("{"), e = clean.lastIndexOf("}");
     const fiche = JSON.parse(s >= 0 && e >= 0 ? clean.slice(s, e + 1) : clean);
 
-    return { statusCode: 200, headers: cors, body: JSON.stringify({ fiche, source: "model", examplesUsed: examples.length }) };
+    return {
+      statusCode: 200,
+      headers: cors,
+      body: JSON.stringify({ fiche, source: "model", examplesUsed: examples.length })
+    };
+
   } catch (e) {
     console.error(e.message);
     return { statusCode: 500, headers: cors, body: JSON.stringify({ error: e.message }) };
