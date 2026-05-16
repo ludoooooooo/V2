@@ -19,8 +19,7 @@
   --red-bg:rgba(192,57,43,0.12);--green-bg:rgba(39,174,96,0.12);
   --r:14px;--r2:8px;
   --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
-  --font:'DM Sans',sans-serif;
-  --font-serif:'Playfair Display',serif;
+  --font:'DM Sans',sans-serif;--font-serif:'Playfair Display',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;overscroll-behavior:none}
@@ -31,7 +30,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .header-right{display:flex;gap:8px;align-items:center}
 .admin-badge{font-size:11px;padding:3px 8px;border-radius:100px;background:rgba(201,168,76,0.15);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
 .hbtn{width:34px;height:34px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px}
-.hbtn:active{background:var(--bg3)}
 .search-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;transition:border-color .2s}
 .search-wrap:focus-within{border-color:var(--gold)}
 .search-lbl{font-size:11px;font-weight:500;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
@@ -52,8 +50,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .status.ok{background:var(--green-bg);color:#2ecc71;border:1px solid rgba(39,174,96,.2)}
 .spin{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;animation:up .35s ease}
-@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Fiche */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .card-head{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .card-head h2{font-family:var(--font-serif);font-size:16px;font-weight:500;margin-bottom:4px}
 .card-head p{font-size:12px;color:var(--text2);line-height:1.5;margin-top:6px}
@@ -63,21 +63,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bdg.r{background:var(--green-bg);color:#2ecc71}
 .ic-btn{width:34px;height:34px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px}
 .ic-btn:active{color:var(--text)}
-.sec{border-bottom:1px solid var(--border);overflow:hidden}
+
+/* Sections toujours visibles */
+.sec{border-bottom:1px solid var(--border);padding:12px 16px 16px;animation:secIn .25s ease both}
 .sec:last-child{border-bottom:none}
-.sec-hd{display:flex;align-items:center;padding:12px 16px 6px;cursor:pointer;gap:10px;user-select:none}
-.sec-hd:active{background:var(--bg3)}
-.sec-ic{width:24px;height:24px;border-radius:6px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-.sec-lbl{flex:1;font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:.8px}
-.sec-chev{display:none}
-.sec.open .sec-chev{transform:rotate(180deg)}
-.sec-body{display:block;padding:4px 16px 16px}
-.sec.open .sec-body{display:block}
+@keyframes secIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sec:nth-child(1){animation-delay:.05s}
+.sec:nth-child(2){animation-delay:.1s}
+.sec:nth-child(3){animation-delay:.15s}
+.sec:nth-child(4){animation-delay:.2s}
+.sec:nth-child(5){animation-delay:.25s}
+.sec:nth-child(6){animation-delay:.3s}
+.sec-lbl{font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sec-ic{width:22px;height:22px;border-radius:5px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
 .sec-txt{font-size:14px;line-height:1.8;color:var(--text)}
 .sec-txt.q{font-family:var(--font-serif);font-style:italic;font-size:15px;color:var(--gold2);padding:12px 14px;background:rgba(201,168,76,.06);border-left:2px solid var(--gold);border-radius:0 var(--r2) var(--r2) 0}
-.edit-row{display:flex;justify-content:flex-end;margin-bottom:8px}
+.edit-row{display:flex;justify-content:flex-end;margin-bottom:6px}
 .edit-sm{font-size:12px;color:var(--gold);background:none;border:1px solid rgba(201,168,76,.25);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px}
-.edit-sm:active{background:rgba(201,168,76,.1)}
 .edit-area{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);color:var(--text);font-family:var(--font);font-size:13px;line-height:1.65;padding:10px 12px;resize:vertical;min-height:80px;outline:none;display:none;margin-top:8px}
 .edit-area:focus{border-color:var(--gold)}
 .sv-row{display:none;gap:8px;margin-top:8px}
@@ -87,11 +89,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .val-lbl{font-size:12px;color:var(--text2);margin-bottom:10px}
 .val-btns{display:flex;gap:8px}
 .val-btn{flex:1;height:40px;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);display:flex;align-items:center;justify-content:center;gap:6px}
-.val-btn:active{transform:scale(.97)}
 .val-btn.good.on{background:var(--green-bg);color:#2ecc71;border-color:rgba(39,174,96,.3)}
 .val-btn.bad.on{background:rgba(231,76,60,.1);color:#e74c3c;border-color:rgba(192,57,43,.3)}
 .val-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:#2ecc71}
 .val-locked{font-size:12px;color:var(--text3);text-align:center;padding:8px 0}
+
+/* Nav */
 .bnav{position:fixed;bottom:0;left:0;right:0;padding:10px 24px calc(var(--sb) + 10px);background:rgba(15,15,15,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;justify-content:space-around}
 .ni{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 16px;border-radius:10px;background:none;border:none;color:var(--text3);font-family:var(--font)}
 .ni.on{color:var(--gold)}
@@ -101,6 +104,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .panel{display:none}
 .panel.on{display:block}
 .pg-title{font-family:var(--font-serif);font-size:20px;font-weight:500;margin-bottom:16px}
+
+/* Historique */
 .hist-empty{text-align:center;padding:60px 20px;color:var(--text3)}
 .hist-empty-ic{font-size:40px;margin-bottom:12px}
 .hi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;cursor:pointer}
@@ -109,6 +114,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hi-p{font-family:var(--font-serif);font-size:15px}
 .hi-d{font-size:11px;color:var(--text3)}
 .hi-prev{font-size:13px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Réglages */
 .ss{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
 .ss-title{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:14px 16px 8px}
 .sr{display:flex;align-items:center;padding:12px 16px;border-top:1px solid var(--border);gap:12px}
@@ -118,9 +125,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sr-lbl{font-size:14px;color:var(--text)}
 .sr-sub{font-size:12px;color:var(--text2);margin-top:1px}
 .sr-val{font-size:13px;color:var(--gold)}
+.admin-section{background:var(--bg2);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.admin-section .ss-title{color:var(--gold)}
+.custom-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);outline:none;margin-top:6px}
+.custom-inp:focus{border-color:var(--gold)}
+.save-settings-btn{width:100%;height:40px;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;margin-top:8px}
+.logout-btn{width:100%;height:40px;background:none;color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:var(--r2);font-family:var(--font);font-size:13px;cursor:pointer;margin-top:8px}
+
+/* Login */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
 .modal-overlay.show{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px;width:100%;max-width:360px;animation:up .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:24px;width:100%;max-width:360px;animation:fadeUp .2s ease}
 .modal h2{font-family:var(--font-serif);font-size:18px;margin-bottom:4px}
 .modal p{font-size:13px;color:var(--text2);margin-bottom:20px}
 .form-field{margin-bottom:14px}
@@ -131,12 +146,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .modal-btn{flex:1;height:40px;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:none}
 .modal-btn.primary{background:var(--gold);color:#0f0f0f}
 .modal-btn.secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
-.admin-section{background:var(--bg2);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
-.admin-section .ss-title{color:var(--gold)}
-.custom-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 12px;font-size:13px;color:var(--text);font-family:var(--font);outline:none;margin-top:6px}
-.custom-inp:focus{border-color:var(--gold)}
-.save-settings-btn{width:100%;height:40px;background:var(--gold);color:#0f0f0f;border:none;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;margin-top:8px}
-.logout-btn{width:100%;height:40px;background:none;color:#e74c3c;border:1px solid rgba(192,57,43,.3);border-radius:var(--r2);font-family:var(--font);font-size:13px;cursor:pointer;margin-top:8px}
+
+/* Install */
 .ib{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.25);border-radius:var(--r);padding:16px;margin-bottom:16px;display:none}
 .ib.show{display:block}
 .ib-title{font-family:var(--font-serif);font-size:15px;color:var(--gold);margin-bottom:6px}
@@ -151,14 +162,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="modal">
     <h2>Connexion Admin</h2>
     <p>Accès réservé aux administrateurs</p>
-    <div class="form-field">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="votre@email.com" autocomplete="email"/>
-    </div>
-    <div class="form-field">
-      <label>Mot de passe</label>
-      <input type="password" id="login-pwd" placeholder="••••••••"/>
-    </div>
+    <div class="form-field"><label>Email</label><input type="email" id="login-email" placeholder="votre@email.com" autocomplete="email"/></div>
+    <div class="form-field"><label>Mot de passe</label><input type="password" id="login-pwd" placeholder="••••••••"/></div>
     <div id="login-error" style="font-size:12px;color:#e74c3c;margin-top:8px;display:none"></div>
     <div class="modal-btns">
       <button class="modal-btn secondary" onclick="closeLogin()">Annuler</button>
@@ -172,7 +177,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="logo" id="app-logo">Fiche<span>Arrêt</span></div>
     <div class="header-right">
       <span id="admin-badge" class="admin-badge" style="display:none">Admin</span>
-      <button class="hbtn" id="admin-btn" onclick="showLogin()" title="Admin">🔐</button>
+      <button class="hbtn" id="admin-btn" onclick="showLogin()">🔐</button>
     </div>
   </div>
 
@@ -205,83 +210,31 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div id="admin-panel" style="display:none">
       <div class="admin-section">
         <div class="ss-title">✨ Personnalisation</div>
-        <div class="sr">
-          <span class="sr-ic">🏷️</span>
-          <div class="sr-info">
-            <div class="sr-lbl">Nom de l'app</div>
-            <input class="custom-inp" id="set-name" type="text" placeholder="FicheArrêt"/>
-          </div>
-        </div>
-        <div class="sr">
-          <span class="sr-ic">🎨</span>
-          <div class="sr-info">
-            <div class="sr-lbl">Couleur d'accent</div>
-            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-              <input type="color" id="set-accent" value="#c9a84c" style="width:40px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px"/>
-              <input class="custom-inp" id="set-accent-hex" type="text" placeholder="#c9a84c" style="margin-top:0;flex:1"/>
-            </div>
-          </div>
-        </div>
-        <div class="sr">
-          <span class="sr-ic">🌙</span>
-          <div class="sr-info">
-            <div class="sr-lbl">Couleur de fond</div>
-            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-              <input type="color" id="set-bg" value="#0f0f0f" style="width:40px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px"/>
-              <input class="custom-inp" id="set-bg-hex" type="text" placeholder="#0f0f0f" style="margin-top:0;flex:1"/>
-            </div>
-          </div>
-        </div>
-        <div class="sr">
-          <span class="sr-ic">🔤</span>
-          <div class="sr-info">
-            <div class="sr-lbl">Police</div>
-            <select class="custom-inp" id="set-font" style="margin-top:6px">
-              <option value="DM Sans">DM Sans (défaut)</option>
-              <option value="Inter">Inter</option>
-              <option value="Lora">Lora</option>
-            </select>
-          </div>
-        </div>
-        <div style="padding:0 16px 14px">
-          <button class="save-settings-btn" onclick="saveSettings()">💾 Sauvegarder l'apparence</button>
-        </div>
+        <div class="sr"><span class="sr-ic">🏷️</span><div class="sr-info"><div class="sr-lbl">Nom de l'app</div><input class="custom-inp" id="set-name" type="text" placeholder="FicheArrêt"/></div></div>
+        <div class="sr"><span class="sr-ic">🎨</span><div class="sr-info"><div class="sr-lbl">Couleur d'accent</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="color" id="set-accent" value="#c9a84c" style="width:40px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px"/><input class="custom-inp" id="set-accent-hex" type="text" placeholder="#c9a84c" style="margin-top:0;flex:1"/></div></div></div>
+        <div class="sr"><span class="sr-ic">🌙</span><div class="sr-info"><div class="sr-lbl">Couleur de fond</div><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="color" id="set-bg" value="#0f0f0f" style="width:40px;height:32px;border:none;background:none;cursor:pointer;border-radius:6px"/><input class="custom-inp" id="set-bg-hex" type="text" placeholder="#0f0f0f" style="margin-top:0;flex:1"/></div></div></div>
+        <div class="sr"><span class="sr-ic">🔤</span><div class="sr-info"><div class="sr-lbl">Police</div><select class="custom-inp" id="set-font" style="margin-top:6px"><option value="DM Sans">DM Sans (défaut)</option><option value="Inter">Inter</option><option value="Lora">Lora</option></select></div></div>
+        <div style="padding:0 16px 14px"><button class="save-settings-btn" onclick="saveSettings()">💾 Sauvegarder</button></div>
       </div>
       <div class="admin-section">
         <div class="ss-title">🧠 Apprentissage partagé</div>
-        <div class="sr">
-          <span class="sr-ic">📊</span>
-          <div class="sr-info"><div class="sr-lbl">Fiches validées</div><div class="sr-sub">Bénéficient à tous les utilisateurs</div></div>
-          <span class="sr-val" id="ex-count-shared">—</span>
-        </div>
-        <div class="sr" style="cursor:pointer" onclick="clearSharedEx()">
-          <span class="sr-ic">🗑️</span>
-          <div class="sr-info"><div class="sr-lbl" style="color:#e74c3c">Effacer tous les exemples</div></div>
-        </div>
+        <div class="sr"><span class="sr-ic">📊</span><div class="sr-info"><div class="sr-lbl">Fiches validées</div><div class="sr-sub">Bénéficient à tous les utilisateurs</div></div><span class="sr-val" id="ex-count-shared">—</span></div>
+        <div class="sr" style="cursor:pointer" onclick="clearSharedEx()"><span class="sr-ic">🗑️</span><div class="sr-info"><div class="sr-lbl" style="color:#e74c3c">Effacer tous les exemples</div></div></div>
       </div>
-      <div style="padding:0 0 14px">
-        <button class="logout-btn" onclick="doLogout()">Se déconnecter</button>
-      </div>
+      <div style="padding:0 0 14px"><button class="logout-btn" onclick="doLogout()">Se déconnecter</button></div>
     </div>
     <div id="ib" class="ib">
       <div class="ib-title">📲 Installer sur iPhone</div>
       <div class="ib-text">Ajoutez FicheArrêt sur votre écran d'accueil :</div>
       <div style="margin-top:10px">
         <div class="ib-step"><span class="ib-num">1</span><span>Appuyez sur <strong>Partager ↑</strong> en bas de Safari</span></div>
-        <div class="ib-step"><span class="ib-num">2</span><span>Choisissez <strong>« Sur l'écran d'accueil »</strong></span></div>
+        <div class="ib-step"><span class="ib-num">2</span><span>Choisissez <strong>Sur l'écran d'accueil</strong></span></div>
         <div class="ib-step"><span class="ib-num">3</span><span>Appuyez sur <strong>Ajouter</strong></span></div>
       </div>
     </div>
     <div class="ss">
       <div class="ss-title">À propos</div>
-      <div class="sr">
-        <span class="sr-ic">⚖️</span>
-        <div class="sr-info">
-          <div class="sr-lbl" id="about-name">FicheArrêt</div>
-          <div class="sr-sub">Cour de cassation · Powered by Gemini</div>
-        </div>
-        <span class="sr-val">v2.0</span>
-      </div>
+      <div class="sr"><span class="sr-ic">⚖️</span><div class="sr-info"><div class="sr-lbl" id="about-name">FicheArrêt</div><div class="sr-sub">Cour de cassation · Powered by Gemini</div></div><span class="sr-val">v3.0</span></div>
     </div>
   </div>
 </div>
@@ -293,65 +246,42 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </nav>
 
 <script>
-var sb = null;
-var cf = null, cp = '', isAdmin = false;
+var sb = null, cf = null, cp = '', isAdmin = false;
 
-// ── Init : charge la config depuis la fonction Netlify ────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   try {
-    const res = await fetch('/.netlify/functions/config');
+    var res = await fetch('/.netlify/functions/config');
     if (!res.ok) throw new Error('Config HTTP ' + res.status);
-    const text = await res.text();
-    if (!text || text.trim() === '') throw new Error('Config vide');
-    let cfg;
-    try { cfg = JSON.parse(text); } catch(e) { throw new Error('Config JSON invalide : ' + text.slice(0, 100)); }
-    if (!cfg.supabaseUrl || !cfg.supabaseAnon) throw new Error('Clés Supabase manquantes dans la config');
+    var cfg = await res.json();
+    if (!cfg.supabaseUrl || !cfg.supabaseAnon) throw new Error('Clés Supabase manquantes');
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
-
-    // Vérifier session admin
-    const { data: { session } } = await sb.auth.getSession();
-    if (session) setAdmin(true);
-
-    // Charger les réglages
+    var sess = await sb.auth.getSession();
+    if (sess.data.session) setAdmin(true);
     await loadSettings();
-
-    // Écouter les changements en temps réel
     sb.channel('settings-live')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, (payload) => {
-        applySettings(payload.new);
-      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, function(p) { applySettings(p.new); })
       .subscribe();
-
   } catch(e) {
-    console.error('Init failed:', e);
+    console.error('Init failed:', e.message);
   }
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-function showLogin() {
-  if (isAdmin) { doLogout(); return; }
-  document.getElementById('login-modal').classList.add('show');
-  setTimeout(() => document.getElementById('login-email').focus(), 100);
-}
+function showLogin() { if (isAdmin) { doLogout(); return; } document.getElementById('login-modal').classList.add('show'); setTimeout(function(){ document.getElementById('login-email').focus(); }, 100); }
 function closeLogin() { document.getElementById('login-modal').classList.remove('show'); }
-
 async function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const pwd = document.getElementById('login-pwd').value;
-  const errEl = document.getElementById('login-error');
+  var email = document.getElementById('login-email').value.trim();
+  var pwd = document.getElementById('login-pwd').value;
+  var errEl = document.getElementById('login-error');
   errEl.style.display = 'none';
-  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) { errEl.textContent = 'Email ou mot de passe incorrect.'; errEl.style.display = 'block'; return; }
-  setAdmin(true);
-  closeLogin();
-  nav('settings');
+  var result = await sb.auth.signInWithPassword({ email: email, password: pwd });
+  if (result.error) { errEl.textContent = 'Email ou mot de passe incorrect.'; errEl.style.display = 'block'; return; }
+  setAdmin(true); closeLogin(); nav('settings');
 }
-
-async function doLogout() {
-  await sb.auth.signOut();
-  setAdmin(false);
-}
-
+async function doLogout() { await sb.auth.signOut(); setAdmin(false); }
 function setAdmin(v) {
   isAdmin = v;
   document.getElementById('admin-badge').style.display = v ? 'inline-flex' : 'none';
@@ -359,67 +289,43 @@ function setAdmin(v) {
   document.getElementById('admin-panel').style.display = v ? 'block' : 'none';
   if (v) loadSharedExCount();
 }
-
 async function loadSharedExCount() {
-  const { count } = await sb.from('exemples').select('*', { count: 'exact', head: true });
-  document.getElementById('ex-count-shared').textContent = count || 0;
+  var r = await sb.from('exemples').select('*', { count: 'exact', head: true });
+  document.getElementById('ex-count-shared').textContent = r.count || 0;
 }
-
 async function clearSharedEx() {
-  if (!confirm('Effacer tous les exemples partagés ?')) return;
+  if (!confirm('Effacer tous les exemples ?')) return;
   await sb.from('exemples').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   document.getElementById('ex-count-shared').textContent = 0;
-  showSt('Exemples effacés.', 'ok');
-  setTimeout(() => showSt('', ''), 2000);
+  showSt('Exemples effacés.', 'ok'); setTimeout(function(){ showSt('',''); }, 2000);
 }
 
 // ── Réglages ──────────────────────────────────────────────────────────────────
 async function loadSettings() {
-  const { data } = await sb.from('settings').select('*').eq('id', 1).single();
-  if (data) applySettings(data);
+  var r = await sb.from('settings').select('*').eq('id', 1).single();
+  if (r.data) applySettings(r.data);
 }
-
 function applySettings(s) {
   if (!s) return;
-  if (s.accent_color) {
-    document.documentElement.style.setProperty('--gold', s.accent_color);
-    document.documentElement.style.setProperty('--gold2', s.accent_color);
-    document.getElementById('set-accent').value = s.accent_color;
-    document.getElementById('set-accent-hex').value = s.accent_color;
-  }
-  if (s.bg_color) {
-    document.documentElement.style.setProperty('--bg', s.bg_color);
-    document.getElementById('set-bg').value = s.bg_color;
-    document.getElementById('set-bg-hex').value = s.bg_color;
-  }
-  if (s.font) {
-    document.documentElement.style.setProperty('--font', "'"+s.font+"', sans-serif");
-    document.getElementById('set-font').value = s.font;
-  }
-  if (s.app_name) {
-    document.getElementById('app-logo').innerHTML = s.app_name.replace(/(Arrêt|Arret)/i, '<span>$1</span>');
-    document.getElementById('about-name').textContent = s.app_name;
-    document.getElementById('set-name').value = s.app_name;
-    document.title = s.app_name;
-  }
+  if (s.accent_color) { document.documentElement.style.setProperty('--gold', s.accent_color); document.documentElement.style.setProperty('--gold2', s.accent_color); document.getElementById('set-accent').value = s.accent_color; document.getElementById('set-accent-hex').value = s.accent_color; }
+  if (s.bg_color) { document.documentElement.style.setProperty('--bg', s.bg_color); document.getElementById('set-bg').value = s.bg_color; document.getElementById('set-bg-hex').value = s.bg_color; }
+  if (s.font) { document.documentElement.style.setProperty('--font', "'" + s.font + "', sans-serif"); document.getElementById('set-font').value = s.font; }
+  if (s.app_name) { document.getElementById('app-logo').innerHTML = s.app_name.replace(/(Arrêt|Arret)/i, '<span>$1</span>'); document.getElementById('about-name').textContent = s.app_name; document.getElementById('set-name').value = s.app_name; document.title = s.app_name; }
 }
-
 async function saveSettings() {
-  const accent = document.getElementById('set-accent-hex').value || document.getElementById('set-accent').value;
-  const bg = document.getElementById('set-bg-hex').value || document.getElementById('set-bg').value;
-  const font = document.getElementById('set-font').value;
-  const name = document.getElementById('set-name').value || 'FicheArrêt';
-  const { error } = await sb.from('settings').update({ accent_color: accent, bg_color: bg, font, app_name: name }).eq('id', 1);
-  if (error) { showSt('Erreur : ' + error.message, 'error'); return; }
-  applySettings({ accent_color: accent, bg_color: bg, font, app_name: name });
-  showSt('Apparence sauvegardée — visible par tous immédiatement.', 'ok');
-  setTimeout(() => showSt('', ''), 3000);
+  var accent = document.getElementById('set-accent-hex').value || document.getElementById('set-accent').value;
+  var bg = document.getElementById('set-bg-hex').value || document.getElementById('set-bg').value;
+  var font = document.getElementById('set-font').value;
+  var name = document.getElementById('set-name').value || 'FicheArrêt';
+  var r = await sb.from('settings').update({ accent_color: accent, bg_color: bg, font: font, app_name: name }).eq('id', 1);
+  if (r.error) { showSt('Erreur : ' + r.error.message, 'error'); return; }
+  applySettings({ accent_color: accent, bg_color: bg, font: font, app_name: name });
+  showSt('Apparence sauvegardée.', 'ok'); setTimeout(function(){ showSt('',''); }, 3000);
 }
-
 document.getElementById('set-accent').addEventListener('input', function() { document.getElementById('set-accent-hex').value = this.value; });
-document.getElementById('set-accent-hex').addEventListener('input', function() { if(/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-accent').value = this.value; });
+document.getElementById('set-accent-hex').addEventListener('input', function() { if (/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-accent').value = this.value; });
 document.getElementById('set-bg').addEventListener('input', function() { document.getElementById('set-bg-hex').value = this.value; });
-document.getElementById('set-bg-hex').addEventListener('input', function() { if(/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-bg').value = this.value; });
+document.getElementById('set-bg-hex').addEventListener('input', function() { if (/^#[0-9a-f]{6}$/i.test(this.value)) document.getElementById('set-bg').value = this.value; });
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 function nav(p) {
@@ -427,267 +333,161 @@ function nav(p) {
     document.getElementById('p-'+x).classList.toggle('on', x===p);
     document.getElementById('n-'+x).classList.toggle('on', x===p);
   });
-  if (p==='hist') renderHist();
-  if (p==='settings' && isAdmin) loadSharedExCount();
+  if (p === 'hist') renderHist();
+  if (p === 'settings' && isAdmin) loadSharedExCount();
 }
-
 function showSt(msg, type) {
   var el = document.getElementById('status');
-  if (!msg) { el.className='status'; el.innerHTML=''; return; }
-  var ic = type==='loading' ? '<span class="spin"></span>' : type==='error' ? '⚠️' : '✅';
-  el.className = 'status show '+type;
-  el.innerHTML = ic+' <span>'+msg+'</span>';
+  if (!msg) { el.className = 'status'; el.innerHTML = ''; return; }
+  var ic = type === 'loading' ? '<span class="spin"></span>' : type === 'error' ? '⚠️' : '✅';
+  el.className = 'status show ' + type;
+  el.innerHTML = ic + ' <span>' + msg + '</span>';
 }
+function pick(v) { document.getElementById('inp').value = v; go(); }
 
-function pick(v) { document.getElementById('inp').value=v; go(); }
-
-// ── Generate avec effet streaming ────────────────────────────────────────────
-var SECTION_LABELS = [
-  {k:'presentation', l:"Identification de l'arrêt", ic:'📄', q:false},
-  {k:'faits',        l:'Faits',                     ic:'📋', q:false},
-  {k:'procedure',    l:'Procédure',                  ic:'⚖️', q:false},
-  {k:'these',        l:'Thèse',                      ic:'💬', q:false},
-  {k:'question',     l:'Question de droit',          ic:'❓', q:true},
-  {k:'solution',     l:'Solution',                   ic:'🏛️', q:false, sol:true},
-];
-
-function showSkeleton(pourvoi) {
-  var skHtml = '<div class="card" id="fiche-card">'
-    + '<div class="card-head">'
-    + '<div><h2>Pourvoi n° '+esc(pourvoi)+'</h2><p style="margin-top:6px;color:var(--text3)">Génération en cours…</p></div>'
-    + '</div>';
-  SECTION_LABELS.forEach(function(s) {
-    skHtml += '<div class="sec" id="sec-'+s.k+'">'
-      + '<div class="sec-hd"><span class="sec-ic">'+s.ic+'</span><span class="sec-lbl">'+s.l+'</span></div>'
-      + '<div class="sec-body"><div class="sec-txt" id="c-'+s.k+'" style="color:var(--text3)">…</div></div>'
-      + '</div>';
-  });
-  skHtml += '</div>';
-  document.getElementById('out').innerHTML = skHtml;
-}
-
-function animateSection(key, value, isSol, bdg) {
-  var el = document.getElementById('c-'+key);
-  if (!el) return;
-  el.style.color = '';
-  if (key === 'question') {
-    el.className = 'sec-txt q';
-    el.textContent = value;
-  } else {
-    el.className = 'sec-txt';
-    el.textContent = (isSol ? '' : '') + value;
-    if (isSol) el.innerHTML = bdg + ' ' + esc(value);
-  }
-}
-
+// ── Generate ──────────────────────────────────────────────────────────────────
 async function go() {
   var pourvoi = document.getElementById('inp').value.trim();
   if (!pourvoi) return;
   var btn = document.getElementById('goBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Génération…';
-  showSt('', '');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Génération…';
+  document.getElementById('out').innerHTML = '';
+  showSt('Génération de la fiche en cours…', 'loading');
   cp = pourvoi;
-
-  // Afficher le squelette immédiatement
-  showSkeleton(pourvoi);
-
   try {
     var res = await fetch('/.netlify/functions/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pourvoi })
+      body: JSON.stringify({ pourvoi: pourvoi })
     });
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
     cf = data.fiche;
-
-    // Animer les sections une par une avec un délai
-    var f = data.fiche;
-    var isC = (f.type_arret||'').toLowerCase()==='cassation';
-    var bdg = isC ? '<span class="bdg c">↩ Cassation</span>' : '<span class="bdg r">✓ Rejet</span>';
-
-    // Mettre à jour l'en-tête
-    var head = document.querySelector('#fiche-card .card-head div');
-    if (head) head.innerHTML = '<h2>Pourvoi n° '+esc(pourvoi)+'</h2>'+bdg+'<p style="margin-top:6px">'+esc((f.presentation||'').split('.')[0]+'.')+'</p>';
-
-    // Ajouter boutons de copie/partage
-    var headEl = document.querySelector('#fiche-card .card-head');
-    if (headEl && !document.querySelector('#fiche-card .card-btns')) {
-      var btns = document.createElement('div');
-      btns.className = 'card-btns';
-      btns.innerHTML = '<button class="ic-btn" onclick="cp2()">📋</button><button class="ic-btn" onclick="shareF()">⬆️</button>';
-      headEl.appendChild(btns);
-    }
-
-    // Révéler les sections avec délai progressif
-    for (var i = 0; i < SECTION_LABELS.length; i++) {
-      var s = SECTION_LABELS[i];
-      await new Promise(function(r){ setTimeout(r, i * 120); });
-      animateSection(s.k, f[s.k]||'(à compléter)', s.sol, bdg);
-
-      // Ajouter bouton modifier pour admin
-      if (isAdmin) {
-        var secBody = document.querySelector('#sec-'+s.k+' .sec-body');
-        if (secBody && !secBody.querySelector('.edit-row')) {
-          var k = s.k;
-          var editDiv = document.createElement('div');
-          editDiv.className = 'edit-row';
-          editDiv.innerHTML = '<button class="edit-sm" onclick="startEd(''+k+'',event)">✏️ Modifier</button>';
-          secBody.insertBefore(editDiv, secBody.firstChild);
-          var ta = document.createElement('textarea');
-          ta.className = 'edit-area'; ta.id = 'e-'+k;
-          ta.value = f[k]||'';
-          secBody.appendChild(ta);
-          var srDiv = document.createElement('div');
-          srDiv.className = 'sv-row'; srDiv.id = 'sr-'+k;
-          srDiv.innerHTML = '<button class="sv-btn" onclick="saveEd(''+k+'')">Enregistrer</button><button class="cn-btn" onclick="cancelEd(''+k+'')">Annuler</button>';
-          secBody.appendChild(srDiv);
-        }
-      }
-    }
-
-    // Ajouter barre de validation
-    var card = document.getElementById('fiche-card');
-    if (card) {
-      var valBar = document.createElement('div');
-      valBar.className = 'val-bar';
-      if (isAdmin) {
-        valBar.innerHTML = '<div class="val-lbl">Cette fiche vous convient ?</div>'
-          +'<div class="val-btns" id="vbtns">'
-          +'<button class="val-btn good" id="vb-good" onclick="validate('good')">👍 Valider</button>'
-          +'<button class="val-btn bad" id="vb-bad" onclick="validate('bad')">🔄 À refaire</button>'
-          +'</div>';
-      } else {
-        valBar.innerHTML = '<div class="val-locked">🔐 Seul l'admin peut valider les fiches</div>';
-      }
-      card.appendChild(valBar);
-    }
-
+    render(data.fiche, pourvoi);
+    showSt('', '');
   } catch(e) {
-    document.getElementById('out').innerHTML = '';
+    console.error('generate error:', e);
     showSt(e.message || 'Erreur.', 'error');
   }
-  btn.disabled = false; btn.innerHTML = '⚡ Générer';
+  btn.disabled = false;
+  btn.innerHTML = '⚡ Générer';
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
 function render(f, pourvoi) {
-  var isC = (f.type_arret||'').toLowerCase()==='cassation';
+  var isC = (f.type_arret||'').toLowerCase() === 'cassation';
   var bdg = isC ? '<span class="bdg c">↩ Cassation</span>' : '<span class="bdg r">✓ Rejet</span>';
   var secs = [
-    {k:'presentation',l:"Identification de l'arrêt",ic:'📄',q:false},
-    {k:'faits',l:'Faits',ic:'📋',q:false},
-    {k:'procedure',l:'Procédure',ic:'⚖️',q:false},
-    {k:'these',l:'Thèse du demandeur',ic:'💬',q:false},
-    {k:'question',l:'Question de droit',ic:'❓',q:true},
-    {k:'solution',l:'Solution',ic:'🏛️',q:false,sol:true},
+    { k:'presentation', l:"Identification de l'arrêt", ic:'📄', q:false },
+    { k:'faits',        l:'Faits',                     ic:'📋', q:false },
+    { k:'procedure',    l:'Procédure',                  ic:'⚖️', q:false },
+    { k:'these',        l:'Thèse',                      ic:'💬', q:false },
+    { k:'question',     l:'Question de droit',          ic:'❓', q:true  },
+    { k:'solution',     l:'Solution',                   ic:'🏛️', q:false, sol:true },
   ];
-  var html = secs.map(function(s,i) {
-    var val = f[s.k]||'(à compléter)';
-    var inner = s.q
-      ? '<div class="sec-txt q" id="c-'+s.k+'">'+esc(val)+'</div>'
-      : '<div class="sec-txt" id="c-'+s.k+'">'+(s.sol?bdg+' ':'')+esc(val)+'</div>';
-    var editBtn = isAdmin ? '<div class="edit-row"><button class="edit-sm" onclick="startEd(\''+s.k+'\',event)">✏️ Modifier</button></div>' : '';
-    return '<div class="sec open" id="sec-'+s.k+'">'
-      +'<div class="sec-hd" onclick="tgl(\''+s.k+'\')">'
-      +'<span class="sec-ic">'+s.ic+'</span><span class="sec-lbl">'+s.l+'</span><span class="sec-chev">▼</span>'
-      +'</div><div class="sec-body">'+editBtn+inner
-      +'<textarea class="edit-area" id="e-'+s.k+'">'+esc(val)+'</textarea>'
-      +'<div class="sv-row" id="sr-'+s.k+'">'
-      +'<button class="sv-btn" onclick="saveEd(\''+s.k+'\')">Enregistrer</button>'
-      +'<button class="cn-btn" onclick="cancelEd(\''+s.k+'\')">Annuler</button>'
-      +'</div></div></div>';
+
+  var secsHtml = secs.map(function(s) {
+    var val = f[s.k] || '(à compléter)';
+    var editHtml = isAdmin
+      ? '<div class="edit-row"><button class="edit-sm" onclick="startEd(\'' + s.k + '\',event)">✏️ Modifier</button></div>'
+        + '<textarea class="edit-area" id="e-' + s.k + '">' + esc(val) + '</textarea>'
+        + '<div class="sv-row" id="sr-' + s.k + '"><button class="sv-btn" onclick="saveEd(\'' + s.k + '\')">Enregistrer</button><button class="cn-btn" onclick="cancelEd(\'' + s.k + '\')">Annuler</button></div>'
+      : '';
+    var innerHtml = s.q
+      ? '<div class="sec-txt q" id="c-' + s.k + '">' + esc(val) + '</div>'
+      : '<div class="sec-txt" id="c-' + s.k + '">' + (s.sol ? bdg + ' ' : '') + esc(val) + '</div>';
+    return '<div class="sec">'
+      + '<div class="sec-lbl"><span class="sec-ic">' + s.ic + '</span>' + s.l + '</div>'
+      + editHtml
+      + innerHtml
+      + '</div>';
   }).join('');
 
-  var valBar = isAdmin
-    ? '<div class="val-bar"><div class="val-lbl">Cette fiche vous convient ?</div>'
-      +'<div class="val-btns" id="vbtns">'
-      +'<button class="val-btn good" id="vb-good" onclick="validate(\'good\')">👍 Valider</button>'
-      +'<button class="val-btn bad" id="vb-bad" onclick="validate(\'bad\')">🔄 À refaire</button>'
-      +'</div></div>'
+  var valHtml = isAdmin
+    ? '<div class="val-bar"><div class="val-lbl">Cette fiche vous convient ?</div><div class="val-btns" id="vbtns"><button class="val-btn good" id="vb-good" onclick="validate(\'good\')">👍 Valider</button><button class="val-btn bad" id="vb-bad" onclick="validate(\'bad\')">🔄 À refaire</button></div></div>'
     : '<div class="val-bar"><div class="val-locked">🔐 Seul l\'admin peut valider les fiches</div></div>';
 
   document.getElementById('out').innerHTML =
-    '<div class="card"><div class="card-head"><div><h2>Pourvoi n° '+esc(pourvoi)+'</h2>'+bdg
-    +'<p>'+esc((f.presentation||'').split('.')[0]+'.')+'</p></div>'
-    +'<div class="card-btns"><button class="ic-btn" onclick="cp2()">📋</button><button class="ic-btn" onclick="shareF()">⬆️</button></div>'
-    +'</div>'+html+valBar+'</div>';
+    '<div class="card">'
+    + '<div class="card-head">'
+    + '<div><h2>Pourvoi n° ' + esc(pourvoi) + '</h2>' + bdg + '<p style="margin-top:6px">' + esc((f.presentation||'').split('.')[0] + '.') + '</p></div>'
+    + '<div class="card-btns"><button class="ic-btn" onclick="cp2()">📋</button><button class="ic-btn" onclick="shareF()">⬆️</button></div>'
+    + '</div>'
+    + secsHtml
+    + valHtml
+    + '</div>';
 }
 
-function tgl(k) { document.getElementById('sec-'+k).classList.toggle('open'); }
-function startEd(k,e) {
-  if(!isAdmin)return; e.stopPropagation();
-  var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  if(cf)ea.value=cf[k]||''; c.style.display='none'; ea.style.display='block'; sr.style.display='flex'; ea.focus();
+// ── Édition ───────────────────────────────────────────────────────────────────
+function startEd(k, e) {
+  if (!isAdmin) return;
+  e.stopPropagation();
+  var c = document.getElementById('c-'+k), ea = document.getElementById('e-'+k), sr = document.getElementById('sr-'+k);
+  if (cf) ea.value = cf[k] || '';
+  c.style.display = 'none'; ea.style.display = 'block'; sr.style.display = 'flex'; ea.focus();
 }
 function saveEd(k) {
-  var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  c.textContent=ea.value.trim(); c.style.display=''; ea.style.display='none'; sr.style.display='none';
-  if(cf)cf[k]=ea.value.trim();
+  var c = document.getElementById('c-'+k), ea = document.getElementById('e-'+k), sr = document.getElementById('sr-'+k);
+  c.textContent = ea.value.trim(); c.style.display = ''; ea.style.display = 'none'; sr.style.display = 'none';
+  if (cf) cf[k] = ea.value.trim();
 }
 function cancelEd(k) {
-  var c=document.getElementById('c-'+k),ea=document.getElementById('e-'+k),sr=document.getElementById('sr-'+k);
-  c.style.display=''; ea.style.display='none'; sr.style.display='none';
+  var c = document.getElementById('c-'+k), ea = document.getElementById('e-'+k), sr = document.getElementById('sr-'+k);
+  c.style.display = ''; ea.style.display = 'none'; sr.style.display = 'none';
 }
 
-// ── Validation → Supabase ─────────────────────────────────────────────────────
+// ── Validation ────────────────────────────────────────────────────────────────
 async function validate(type) {
   if (!isAdmin) return;
-  document.getElementById('vb-good').classList.toggle('on', type==='good');
-  document.getElementById('vb-bad').classList.toggle('on', type==='bad');
-  if (type==='good' && cf) {
-    const { error } = await sb.from('exemples').insert({
-      presentation:cf.presentation, faits:cf.faits, procedure:cf.procedure,
-      these:cf.these, question:cf.question, solution:cf.solution,
-      type_arret:cf.type_arret, pourvoi:cp
-    });
-    if (error) { showSt('Erreur validation : '+error.message, 'error'); return; }
-    var h=loadHi(); h.unshift({pourvoi:cp,fiche:Object.assign({},cf),date:new Date().toISOString()});
-    if(h.length>30)h=h.slice(0,30); saveHi(h);
-    document.getElementById('vbtns').innerHTML='<div class="val-ok">✅ Fiche validée — mémorisée pour tous</div>';
-    showSt('Fiche validée et partagée avec tous !','ok');
-    setTimeout(()=>showSt('',''),3000);
+  document.getElementById('vb-good').classList.toggle('on', type === 'good');
+  document.getElementById('vb-bad').classList.toggle('on', type === 'bad');
+  if (type === 'good' && cf) {
+    var r = await sb.from('exemples').insert({ presentation:cf.presentation, faits:cf.faits, procedure:cf.procedure, these:cf.these, question:cf.question, solution:cf.solution, type_arret:cf.type_arret, pourvoi:cp });
+    if (r.error) { showSt('Erreur validation : ' + r.error.message, 'error'); return; }
+    var h = loadHi(); h.unshift({ pourvoi:cp, fiche:Object.assign({},cf), date:new Date().toISOString() }); if (h.length>30) h=h.slice(0,30); saveHi(h);
+    document.getElementById('vbtns').innerHTML = '<div class="val-ok">✅ Fiche validée — mémorisée pour tous</div>';
+    showSt('Fiche validée et partagée !', 'ok'); setTimeout(function(){ showSt('',''); }, 3000);
     loadSharedExCount();
-  } else if (type==='bad') {
-    showSt('Modifiez les sections souhaitées, puis revalidez.','loading');
-    setTimeout(()=>showSt('',''),2500);
+  } else if (type === 'bad') {
+    showSt('Modifiez les sections, puis revalidez.', 'loading'); setTimeout(function(){ showSt('',''); }, 2500);
   }
 }
 
 // ── Historique ────────────────────────────────────────────────────────────────
-function loadHi(){try{return JSON.parse(localStorage.getItem('fa_hi')||'[]')}catch(e){return[]}}
-function saveHi(v){localStorage.setItem('fa_hi',JSON.stringify(v))}
-function renderHist(){
-  var h=loadHi(),el=document.getElementById('hist-list');
-  if(!h.length){el.innerHTML='<div class="hist-empty"><div class="hist-empty-ic">📚</div><div>Aucune fiche validée pour l\'instant.</div></div>';return;}
-  el.innerHTML=h.map(function(item,i){
-    var d=new Date(item.date),ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-    return'<div class="hi" onclick="loadHi2('+i+')">'
-      +'<div class="hi-top"><span class="hi-p">Pourvoi n° '+esc(item.pourvoi)+'</span><span class="hi-d">'+ds+'</span></div>'
-      +'<div class="hi-prev">'+esc(item.fiche.presentation||'')+'</div></div>';
+function loadHi() { try { return JSON.parse(localStorage.getItem('fa_hi')||'[]'); } catch(e) { return []; } }
+function saveHi(v) { localStorage.setItem('fa_hi', JSON.stringify(v)); }
+function renderHist() {
+  var h = loadHi(), el = document.getElementById('hist-list');
+  if (!h.length) { el.innerHTML = '<div class="hist-empty"><div class="hist-empty-ic">📚</div><div>Aucune fiche validée pour l\'instant.</div></div>'; return; }
+  el.innerHTML = h.map(function(item, i) {
+    var d = new Date(item.date), ds = d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    return '<div class="hi" onclick="loadHi2(' + i + ')">'
+      + '<div class="hi-top"><span class="hi-p">Pourvoi n° ' + esc(item.pourvoi) + '</span><span class="hi-d">' + ds + '</span></div>'
+      + '<div class="hi-prev">' + esc(item.fiche.presentation||'') + '</div></div>';
   }).join('');
 }
-function loadHi2(i){
-  var h=loadHi();if(!h[i])return;
-  cf=h[i].fiche;cp=h[i].pourvoi;
-  document.getElementById('inp').value=h[i].pourvoi;
-  nav('search');render(h[i].fiche,h[i].pourvoi);
-  document.getElementById('out').scrollIntoView({behavior:'smooth'});
+function loadHi2(i) {
+  var h = loadHi(); if (!h[i]) return;
+  cf = h[i].fiche; cp = h[i].pourvoi;
+  document.getElementById('inp').value = h[i].pourvoi;
+  nav('search'); render(h[i].fiche, h[i].pourvoi);
+  document.getElementById('out').scrollIntoView({ behavior:'smooth' });
 }
 
 // ── Partage ───────────────────────────────────────────────────────────────────
-function ficheText(){
-  if(!cf)return'';
-  return['IDENTIFICATION\n'+(cf.presentation||''),'FAITS\n'+(cf.faits||''),'PROCÉDURE\n'+(cf.procedure||''),'THÈSE DU DEMANDEUR\n'+(cf.these||''),'QUESTION DE DROIT\n'+(cf.question||''),'SOLUTION\n'+(cf.solution||'')].join('\n\n')+'\n\nPourvoi n° '+cp;
+function ficheText() {
+  if (!cf) return '';
+  return ['IDENTIFICATION\n'+(cf.presentation||''), 'FAITS\n'+(cf.faits||''), 'PROCÉDURE\n'+(cf.procedure||''), 'THÈSE\n'+(cf.these||''), 'QUESTION DE DROIT\n'+(cf.question||''), 'SOLUTION\n'+(cf.solution||'')].join('\n\n') + '\n\nPourvoi n° ' + cp;
 }
-function cp2(){navigator.clipboard&&navigator.clipboard.writeText(ficheText()).then(function(){showSt('Fiche copiée !','ok');setTimeout(function(){showSt('','');},2000);})}
-function shareF(){navigator.share?navigator.share({title:'Fiche arrêt n° '+cp,text:ficheText()}):cp2();}
+function cp2() { navigator.clipboard && navigator.clipboard.writeText(ficheText()).then(function(){ showSt('Fiche copiée !', 'ok'); setTimeout(function(){ showSt('',''); }, 2000); }); }
+function shareF() { navigator.share ? navigator.share({ title:'Fiche arrêt n° '+cp, text:ficheText() }) : cp2(); }
 
-if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.navigator.standalone) document.getElementById('ib').classList.add('show');
-document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
-document.getElementById('login-pwd').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+// ── iOS install ───────────────────────────────────────────────────────────────
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) document.getElementById('ib').classList.add('show');
+
+document.getElementById('inp').addEventListener('keydown', function(e) { if (e.key === 'Enter') go(); });
+document.getElementById('login-pwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 
 init();
 </script>
