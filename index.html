@@ -300,7 +300,12 @@ var cf = null, cp = '', isAdmin = false;
 async function init() {
   try {
     const res = await fetch('/.netlify/functions/config');
-    const cfg = await res.json();
+    if (!res.ok) throw new Error('Config HTTP ' + res.status);
+    const text = await res.text();
+    if (!text || text.trim() === '') throw new Error('Config vide');
+    let cfg;
+    try { cfg = JSON.parse(text); } catch(e) { throw new Error('Config JSON invalide : ' + text.slice(0, 100)); }
+    if (!cfg.supabaseUrl || !cfg.supabaseAnon) throw new Error('Clés Supabase manquantes dans la config');
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnon);
 
     // Vérifier session admin
@@ -436,15 +441,56 @@ function showSt(msg, type) {
 
 function pick(v) { document.getElementById('inp').value=v; go(); }
 
-// ── Generate ──────────────────────────────────────────────────────────────────
+// ── Generate avec effet streaming ────────────────────────────────────────────
+var SECTION_LABELS = [
+  {k:'presentation', l:"Identification de l'arrêt", ic:'📄', q:false},
+  {k:'faits',        l:'Faits',                     ic:'📋', q:false},
+  {k:'procedure',    l:'Procédure',                  ic:'⚖️', q:false},
+  {k:'these',        l:'Thèse',                      ic:'💬', q:false},
+  {k:'question',     l:'Question de droit',          ic:'❓', q:true},
+  {k:'solution',     l:'Solution',                   ic:'🏛️', q:false, sol:true},
+];
+
+function showSkeleton(pourvoi) {
+  var skHtml = '<div class="card" id="fiche-card">'
+    + '<div class="card-head">'
+    + '<div><h2>Pourvoi n° '+esc(pourvoi)+'</h2><p style="margin-top:6px;color:var(--text3)">Génération en cours…</p></div>'
+    + '</div>';
+  SECTION_LABELS.forEach(function(s) {
+    skHtml += '<div class="sec" id="sec-'+s.k+'">'
+      + '<div class="sec-hd"><span class="sec-ic">'+s.ic+'</span><span class="sec-lbl">'+s.l+'</span></div>'
+      + '<div class="sec-body"><div class="sec-txt" id="c-'+s.k+'" style="color:var(--text3)">…</div></div>'
+      + '</div>';
+  });
+  skHtml += '</div>';
+  document.getElementById('out').innerHTML = skHtml;
+}
+
+function animateSection(key, value, isSol, bdg) {
+  var el = document.getElementById('c-'+key);
+  if (!el) return;
+  el.style.color = '';
+  if (key === 'question') {
+    el.className = 'sec-txt q';
+    el.textContent = value;
+  } else {
+    el.className = 'sec-txt';
+    el.textContent = (isSol ? '' : '') + value;
+    if (isSol) el.innerHTML = bdg + ' ' + esc(value);
+  }
+}
+
 async function go() {
   var pourvoi = document.getElementById('inp').value.trim();
   if (!pourvoi) return;
   var btn = document.getElementById('goBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> En cours…';
-  document.getElementById('out').innerHTML = '';
-  showSt('Génération de la fiche en cours…', 'loading');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Génération…';
+  showSt('', '');
   cp = pourvoi;
+
+  // Afficher le squelette immédiatement
+  showSkeleton(pourvoi);
+
   try {
     var res = await fetch('/.netlify/functions/generate', {
       method: 'POST',
@@ -454,9 +500,73 @@ async function go() {
     var data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Erreur serveur');
     cf = data.fiche;
-    render(data.fiche, pourvoi);
-    showSt('', '');
-  } catch(e) { showSt(e.message || 'Erreur.', 'error'); }
+
+    // Animer les sections une par une avec un délai
+    var f = data.fiche;
+    var isC = (f.type_arret||'').toLowerCase()==='cassation';
+    var bdg = isC ? '<span class="bdg c">↩ Cassation</span>' : '<span class="bdg r">✓ Rejet</span>';
+
+    // Mettre à jour l'en-tête
+    var head = document.querySelector('#fiche-card .card-head div');
+    if (head) head.innerHTML = '<h2>Pourvoi n° '+esc(pourvoi)+'</h2>'+bdg+'<p style="margin-top:6px">'+esc((f.presentation||'').split('.')[0]+'.')+'</p>';
+
+    // Ajouter boutons de copie/partage
+    var headEl = document.querySelector('#fiche-card .card-head');
+    if (headEl && !document.querySelector('#fiche-card .card-btns')) {
+      var btns = document.createElement('div');
+      btns.className = 'card-btns';
+      btns.innerHTML = '<button class="ic-btn" onclick="cp2()">📋</button><button class="ic-btn" onclick="shareF()">⬆️</button>';
+      headEl.appendChild(btns);
+    }
+
+    // Révéler les sections avec délai progressif
+    for (var i = 0; i < SECTION_LABELS.length; i++) {
+      var s = SECTION_LABELS[i];
+      await new Promise(function(r){ setTimeout(r, i * 120); });
+      animateSection(s.k, f[s.k]||'(à compléter)', s.sol, bdg);
+
+      // Ajouter bouton modifier pour admin
+      if (isAdmin) {
+        var secBody = document.querySelector('#sec-'+s.k+' .sec-body');
+        if (secBody && !secBody.querySelector('.edit-row')) {
+          var k = s.k;
+          var editDiv = document.createElement('div');
+          editDiv.className = 'edit-row';
+          editDiv.innerHTML = '<button class="edit-sm" onclick="startEd(''+k+'',event)">✏️ Modifier</button>';
+          secBody.insertBefore(editDiv, secBody.firstChild);
+          var ta = document.createElement('textarea');
+          ta.className = 'edit-area'; ta.id = 'e-'+k;
+          ta.value = f[k]||'';
+          secBody.appendChild(ta);
+          var srDiv = document.createElement('div');
+          srDiv.className = 'sv-row'; srDiv.id = 'sr-'+k;
+          srDiv.innerHTML = '<button class="sv-btn" onclick="saveEd(''+k+'')">Enregistrer</button><button class="cn-btn" onclick="cancelEd(''+k+'')">Annuler</button>';
+          secBody.appendChild(srDiv);
+        }
+      }
+    }
+
+    // Ajouter barre de validation
+    var card = document.getElementById('fiche-card');
+    if (card) {
+      var valBar = document.createElement('div');
+      valBar.className = 'val-bar';
+      if (isAdmin) {
+        valBar.innerHTML = '<div class="val-lbl">Cette fiche vous convient ?</div>'
+          +'<div class="val-btns" id="vbtns">'
+          +'<button class="val-btn good" id="vb-good" onclick="validate('good')">👍 Valider</button>'
+          +'<button class="val-btn bad" id="vb-bad" onclick="validate('bad')">🔄 À refaire</button>'
+          +'</div>';
+      } else {
+        valBar.innerHTML = '<div class="val-locked">🔐 Seul l'admin peut valider les fiches</div>';
+      }
+      card.appendChild(valBar);
+    }
+
+  } catch(e) {
+    document.getElementById('out').innerHTML = '';
+    showSt(e.message || 'Erreur.', 'error');
+  }
   btn.disabled = false; btn.innerHTML = '⚡ Générer';
 }
 
