@@ -154,7 +154,7 @@ Génère la fiche d'arrêt avec le plus grand soin et la plus grande précision 
       { "Content-Type": "application/json" },
       {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.15, maxOutputTokens: 3000 }
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1800 }
       }
     );
 
