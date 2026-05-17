@@ -35,6 +35,49 @@ function get(hostname, path, headers) {
   });
 }
 
+function getHtml(hostname, path) {
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname, path, method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; LegAsk/1.0)",
+        "Accept": "application/json",
+        "Accept-Language": "fr-FR,fr;q=0.9"
+      }
+    }, (res) => {
+      let raw = "";
+      res.on("data", (c) => (raw += c));
+      res.on("end", () => resolve({ status: res.statusCode, body: raw }));
+    });
+    req.on("error", reject);
+    req.end();
+  });
+}
+
+// Recherche sur l'API publique Judilibre (sans auth, endpoint public)
+async function fetchFromJudilibre(pourvoi) {
+  const clean = pourvoi.trim().replace(/\s/g, "");
+  
+  // Endpoint public Judilibre sans authentification
+  const path = `/cassation/judilibre/v1.0/search?query=${encodeURIComponent(clean)}&type=arret&page_size=1&page=0`;
+  
+  const res = await getHtml("api.judilibre.io", path);
+  if (res.status !== 200) throw new Error("Judilibre public " + res.status);
+  
+  const data = JSON.parse(res.body);
+  const results = data.results || [];
+  if (!results.length) throw new Error("Décision introuvable");
+  
+  const d = results[0];
+  return {
+    text: d.text || d.summary || "",
+    date: d.decision_date || d.date || "",
+    chamber: d.chamber || d.formation || "",
+    solution: d.solution || "",
+    number: d.number || pourvoi
+  };
+}
+
 async function getExamples() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
@@ -66,6 +109,18 @@ exports.handler = async (event) => {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) throw new Error("Clé Gemini manquante");
 
+    // 1. Récupérer le texte officiel
+    let decisionData = null;
+    let source = "model";
+    try {
+      decisionData = await fetchFromJudilibre(pourvoi);
+      source = "judilibre";
+      console.log("Judilibre OK:", pourvoi, "date:", decisionData.date);
+    } catch(e) {
+      console.log("Judilibre indisponible:", e.message);
+    }
+
+    // 2. Exemples Supabase
     const examples = await getExamples();
     const exPrompt = examples.length
       ? "\n\n---\nEXEMPLES DE FICHES VALIDÉES (reproduire ce style et ce niveau de précision) :\n" +
@@ -73,6 +128,14 @@ exports.handler = async (event) => {
           `PRÉSENTATION: ${e.presentation}\nFAITS: ${e.faits}\nPROCÉDURE: ${e.procedure}\nTHÈSE: ${e.these}\nQUESTION: ${e.question}\nSOLUTION: ${e.solution}`
         ).join("\n---\n")
       : "";
+
+    // 3. Contexte décision
+    let decisionContext = "";
+    if (decisionData && decisionData.text) {
+      decisionContext = `\n\nTEXTE OFFICIEL DE LA DÉCISION (Judilibre) — utiliser ces informations en priorité absolue :\nDate exacte : ${decisionData.date}\nChambre : ${decisionData.chamber}\nSolution officielle : ${decisionData.solution}\nTexte intégral :\n${decisionData.text.slice(0, 8000)}`;
+    } else {
+      decisionContext = `\n\nATTENTION : texte officiel indisponible. Génère depuis tes connaissances en étant très prudent sur les dates et informations factuelles. Indique "À vérifier sur Légifrance" si incertain.`;
+    }
 
     const prompt = `Tu es un juriste expert en droit privé français. Tu rédiges des fiches d'arrêt de la Cour de cassation de très haute qualité pédagogique et professionnelle.
 
@@ -82,64 +145,43 @@ Réponds UNIQUEMENT avec un JSON valide sans backticks ni texte autour :
 ## RÈGLES MÉTHODOLOGIQUES STRICTES
 
 ### 1. PRÉSENTATION
-Une seule phrase d'accroche sobre :
-"L'arrêt rendu par la [chambre complète] de la Cour de cassation le [date complète] traite de [notion juridique centrale en 5-10 mots]."
+Une seule phrase : "L'arrêt rendu par la [chambre complète] de la Cour de cassation le [date complète au format jour mois année] traite de [notion juridique centrale en 5-10 mots]."
+- Utiliser la date EXACTE fournie dans le texte officiel
 - Chambre complète : "première chambre civile", "chambre commerciale, financière et économique", "chambre sociale", etc.
-- Sujet = la notion juridique en cause, pas les faits. Ex : "la validité de la mention manuscrite du cautionnement", "les conditions de la compensation judiciaire", "la portée de la promesse unilatérale de vente"
-- Ne jamais anticiper la solution
+- Sujet = notion juridique, pas les faits
 
 ### 2. FAITS
 Exposé factuel rigoureux, chronologique, en 3 à 6 phrases :
 - Commencer OBLIGATOIREMENT par "En l'espèce,"
-- Qualifier chaque partie par sa qualité juridique PRÉCISE : vendeur/acquéreur, bailleur/preneur, prêteur/emprunteur, créancier/débiteur, promettant/bénéficiaire, cédant/cessionnaire, mandant/mandataire, commettant/préposé, employeur/salarié, caution/créancier/débiteur principal, victime/responsable...
-- JAMAIS de noms propres, de noms de société, d'initiales
-- Inclure : nature des liens juridiques entre parties, actes juridiques conclus, circonstances pertinentes pour la qualification
-- EXCLURE : tout acte de procédure, toute décision de justice — la procédure va dans la section suivante
+- Qualifier chaque partie par sa qualité juridique PRÉCISE : vendeur/acquéreur, bailleur/preneur, prêteur/emprunteur, créancier/débiteur, promettant/bénéficiaire, cédant/cessionnaire, mandant/mandataire, employeur/salarié, caution/débiteur principal...
+- JAMAIS de noms propres ni de noms de société
+- EXCLURE tout acte de procédure
 
 ### 3. PROCÉDURE
-Chronologie précise des instances judiciaires :
-- Indiquer la juridiction de première instance saisie (si connue), par qui et pour quoi
-- Qualifier correctement : les juges de première instance rendent des JUGEMENTS ; la cour d'appel et la Cour de cassation rendent des ARRÊTS
+- Juridiction de première instance si connue, par qui et pour quoi
+- Les juges de première instance rendent des JUGEMENTS ; la cour d'appel et la Cour de cassation rendent des ARRÊTS
 - La cour d'appel CONFIRME ou INFIRME le jugement
-- Exposer la décision et les motifs de la cour d'appel avec précision
-- Identifier qui forme le pourvoi en cassation (le demandeur au pourvoi) et contre qui (le défendeur au pourvoi)
-- NE PAS mentionner les arguments du pourvoi ici — ils vont dans la thèse
+- Décision et motifs précis de la cour d'appel
+- Qui forme le pourvoi en cassation
 
 ### 4. THÈSE EN PRÉSENCE
-⚠️ RÈGLE ABSOLUE — contenu différent selon le type d'arrêt :
-
-ARRÊT DE CASSATION → La Cour de cassation n'est PAS d'accord avec les juges du fond. Exposer les motifs et le raisonnement de la COUR D'APPEL que la Cour va censurer :
-"Pour [statuer ainsi], la cour d'appel a retenu que [motifs détaillés de la CA]. Elle a fondé sa décision sur [textes éventuels]."
-Ne pas exposer les arguments du pourvoi (la Cour de cassation est d'accord avec eux, ils n'ont pas besoin d'être détaillés).
-
-ARRÊT DE REJET → La Cour de cassation est d'accord avec les juges du fond. Exposer les arguments et moyens du DEMANDEUR AU POURVOI que la Cour va écarter :
-"Le demandeur au pourvoi fait grief à l'arrêt d'avoir [décision contestée]. Il soutient, au soutien de son pourvoi, que [arguments]. Il invoque la violation des articles [X, Y, Z]."
+RÈGLE ABSOLUE selon le type d'arrêt :
+- CASSATION → motifs de la COUR D'APPEL que la Cour va censurer. Commencer par "Pour [statuer ainsi], la cour d'appel a retenu que..."
+- REJET → arguments du DEMANDEUR AU POURVOI. Commencer par "Le demandeur au pourvoi fait grief à l'arrêt d'avoir [décision contestée]. Il soutient que..."
 
 ### 5. QUESTION DE DROIT
-Critères impératifs :
-- Une seule phrase interrogative terminée par "?"
-- Formulée en termes GÉNÉRAUX et ABSTRAITS — aucun nom propre, aucune référence aux faits particuliers de l'espèce
-- Doit pouvoir être posée sans connaître l'affaire et appeler une réponse par oui ou non
-- Vise la RÈGLE DE DROIT en cause, pas la situation factuelle
-- Exemples de bonne formulation :
-  "La levée d'option d'une promesse unilatérale de vente postérieure à la rétractation du promettant empêche-t-elle la formation du contrat de vente ?"
-  "La caution peut-elle opposer au créancier les exceptions purement personnelles au débiteur principal ?"
-  "Le juge peut-il écarter des débats une preuve obtenue sans violence ni fraude en matière de divorce ?"
-  "L'illicéité du contrat de gestation pour autrui constitue-t-elle une fin de non-recevoir à l'action en établissement de filiation du père biologique ?"
+- Une seule phrase interrogative abstraite, sans noms propres
+- Appelle une réponse par oui ou non
+- Formulée comme un principe général
 
 ### 6. SOLUTION
-Format rigoureux :
-"La [chambre complète] de la Cour de cassation répond par la [affirmative/négative] et [casse et annule l'arrêt rendu par la cour d'appel / rejette le pourvoi] [au visa des articles X et Y — UNIQUEMENT pour les arrêts de cassation] au motif que [motif juridique précis, complet, fidèle au raisonnement de la Cour, formulé comme un principe général]."
-
-- CASSATION : mentionner obligatoirement le visa (articles et codes). Le motif doit être un principe de droit général, pas une description des faits.
-- REJET : pas de visa obligatoire. Exposer le raisonnement de la Cour qui justifie le maintien de la décision attaquée.
-- Si cassation avec renvoi : préciser "renvoie les parties devant [juridiction de renvoi]"
-- Si cassation sans renvoi : le mentionner
+"La [chambre complète] de la Cour de cassation répond par la [affirmative/négative] et [casse et annule l'arrêt / rejette le pourvoi] [au visa de l'article X — si cassation] au motif que [motif précis et complet]."
+- CASSATION : visa obligatoire
+- REJET : pas de visa
 ${exPrompt}
+${decisionContext}
 
----
-Numéro de pourvoi : ${pourvoi}
-Génère la fiche avec la plus grande rigueur juridique. Si tu ne connais pas cet arrêt avec certitude, indique "À vérifier sur Légifrance" uniquement dans les sections incertaines.`;
+Numéro de pourvoi : ${pourvoi}`;
 
     const geminiRes = await post(
       "generativelanguage.googleapis.com",
@@ -147,7 +189,7 @@ Génère la fiche avec la plus grande rigueur juridique. Si tu ne connais pas ce
       { "Content-Type": "application/json" },
       {
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.15, maxOutputTokens: 1800 }
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1800 }
       }
     );
 
@@ -168,7 +210,7 @@ Génère la fiche avec la plus grande rigueur juridique. Si tu ne connais pas ce
     return {
       statusCode: 200,
       headers: cors,
-      body: JSON.stringify({ fiche, source: "model", examplesUsed: examples.length })
+      body: JSON.stringify({ fiche, source, examplesUsed: examples.length })
     };
 
   } catch (e) {
