@@ -74,68 +74,78 @@ async function scrapeDecision(pourvoi) {
   // 1. Recherche sur Légifrance
   const searchUrl = `https://www.legifrance.gouv.fr/search/juri?query=${encodeURIComponent(clean)}&searchField=ALL&tab_selection=juri&page=1`;
   const searchRes = await httpRequest(searchUrl);
-
   if (searchRes.status !== 200) throw new Error("Légifrance search HTTP " + searchRes.status);
 
-  // Extraire l'URL du premier résultat
+  // Extraire l'URL du premier résultat (JURITEXT)
   const html = searchRes.body;
-  const linkMatch = html.match(/href="(\/juri\/id\/[^"]+)"/);
-  if (!linkMatch) {
-    // Essayer format alternatif
-    const altMatch = html.match(/href="([^"]*JURITEXT[^"]+)"/);
-    if (!altMatch) throw new Error("Aucun résultat trouvé sur Légifrance");
-    var decisionUrl = "https://www.legifrance.gouv.fr" + altMatch[1];
-  } else {
-    var decisionUrl = "https://www.legifrance.gouv.fr" + linkMatch[1];
-  }
+  const juriMatch = html.match(/href="([^"]*JURITEXT[0-9]+[^"]*)"/);
+  const juri2Match = html.match(/href="(\/juri\/id\/JURITEXT[^"]+)"/);
+  const linkMatch = juriMatch || juri2Match;
+  if (!linkMatch) throw new Error("Aucun résultat trouvé sur Légifrance pour " + clean);
+
+  let decisionUrl = linkMatch[1];
+  if (!decisionUrl.startsWith("http")) decisionUrl = "https://www.legifrance.gouv.fr" + decisionUrl;
+  // Nettoyer l'URL
+  decisionUrl = decisionUrl.split("?")[0];
 
   // 2. Récupérer la page de la décision
   const decisionRes = await httpRequest(decisionUrl);
   if (decisionRes.status !== 200) throw new Error("Légifrance decision HTTP " + decisionRes.status);
-
   const decisionHtml = decisionRes.body;
 
-  // 3. Extraire les métadonnées et le texte
-  // Date
-  const dateMatch = decisionHtml.match(/(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i);
-  const date = dateMatch ? `${dateMatch[1]} ${dateMatch[2].toLowerCase()} ${dateMatch[3]}` : "";
+  // 3. Extraire le texte brut (retirer les balises HTML)
+  let text = decisionHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  // Chambre
+  if (!text || text.length < 200) throw new Error("Texte trop court");
+
+  // 4. Extraire la date depuis "Audience publique du X mois AAAA"
+  // C'est la formulation officielle en tête de chaque arrêt
+  const audienceMatch = text.match(/[Aa]udience publique du\s+(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i);
+  const date = audienceMatch
+    ? `${audienceMatch[1]} ${audienceMatch[2].toLowerCase()} ${audienceMatch[3]}`
+    : "";
+
+  // 5. Chambre — chercher le titre officiel
   const chambrePatterns = [
+    /chambre commerciale,\s*financière et économique/i,
     /première chambre civile/i,
     /deuxième chambre civile/i,
     /troisième chambre civile/i,
-    /chambre commerciale/i,
     /chambre sociale/i,
     /chambre criminelle/i,
     /assemblée plénière/i,
-    /chambre mixte/i
+    /chambre mixte/i,
+    /chambre commerciale/i,
   ];
   let chamber = "";
   for (const p of chambrePatterns) {
-    if (p.test(decisionHtml)) { chamber = decisionHtml.match(p)[0]; break; }
+    const m = text.match(p);
+    if (m) { chamber = m[0]; break; }
   }
 
-  // Solution
-  const solutionMatch = decisionHtml.match(/(cassation|rejet|irrecevabilité|déchéance)/i);
-  const solution = solutionMatch ? solutionMatch[1].toLowerCase() : "";
-
-  // Texte principal — extraire le contenu entre balises article/section
-  let text = "";
-  const articleMatch = decisionHtml.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-  if (articleMatch) {
-    text = articleMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  } else {
-    // Fallback : extraire tout le texte visible
-    const bodyMatch = decisionHtml.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
-    if (bodyMatch) {
-      text = bodyMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    }
+  // 6. Solution officielle
+  const solutionPatterns = [
+    /REJETTE le pourvoi/i,
+    /CASSE ET ANNULE/i,
+    /cassation partielle/i,
+    /Rejet/i,
+    /Cassation/i,
+  ];
+  let solution = "";
+  for (const p of solutionPatterns) {
+    const m = text.match(p);
+    if (m) { solution = m[0]; break; }
   }
 
-  if (!text || text.length < 100) throw new Error("Texte de la décision trop court");
-
-  return { text, date, chamber, solution, url: decisionUrl };
+  return { text: text.slice(0, 10000), date, chamber, solution, url: decisionUrl };
 }
 
 // ── Supabase exemples ─────────────────────────────────────────────────────────
