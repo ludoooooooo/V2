@@ -92,6 +92,16 @@ async function getExamples() {
   return Array.isArray(res.body) ? res.body : [];
 }
 
+// Extraire la date du texte officiel
+function extractDate(text) {
+  if (!text) return null;
+  // Format : "Audience publique du 17 février 2021" ou "le 17 février 2021"
+  const months = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
+  const m = text.match(/(?:du|le)\s+(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i);
+  if (m) return `${m[1].padStart(2,'0')} ${m[2].toLowerCase()} ${m[3]}`;
+  return null;
+}
+
 exports.handler = async (event) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -132,7 +142,8 @@ exports.handler = async (event) => {
     // 3. Contexte décision
     let decisionContext = "";
     if (decisionData && decisionData.text) {
-      decisionContext = `\n\nTEXTE OFFICIEL DE LA DÉCISION (Judilibre) — utiliser ces informations en priorité absolue :\nDate exacte : ${decisionData.date}\nChambre : ${decisionData.chamber}\nSolution officielle : ${decisionData.solution}\nTexte intégral :\n${decisionData.text.slice(0, 8000)}`;
+      const extractedDate = extractDate(decisionData.text) || decisionData.date;
+      decisionContext = `\n\nTEXTE OFFICIEL DE LA DÉCISION (Judilibre) — utiliser ces informations en priorité absolue, NE PAS inventer d'autres dates :\nDate EXACTE et OBLIGATOIRE à utiliser : ${extractedDate}\nChambre : ${decisionData.chamber}\nSolution officielle : ${decisionData.solution}\nTexte intégral (la date figure dans les premières lignes) :\n${decisionData.text.slice(0, 8000)}`;
     } else {
       decisionContext = `\n\nATTENTION : texte officiel indisponible. Génère depuis tes connaissances en étant très prudent sur les dates et informations factuelles. Indique "À vérifier sur Légifrance" si incertain.`;
     }
