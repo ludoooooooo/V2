@@ -1,6 +1,38 @@
 const https = require("https");
+const http = require("http");
 
-function post(hostname, path, headers, body) {
+// ── HTTP helpers ──────────────────────────────────────────────────────────────
+function httpRequest(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const lib = parsed.protocol === "https:" ? https : http;
+    const req = lib.request({
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      method: options.method || "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/json,*/*",
+        "Accept-Language": "fr-FR,fr;q=0.9",
+        "Cache-Control": "no-cache",
+        ...(options.headers || {})
+      }
+    }, (res) => {
+      // Suivre les redirections
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return httpRequest(res.headers.location, options).then(resolve).catch(reject);
+      }
+      let raw = "";
+      res.on("data", (c) => (raw += c));
+      res.on("end", () => resolve({ status: res.statusCode, body: raw, headers: res.headers }));
+    });
+    req.on("error", reject);
+    if (options.body) req.write(options.body);
+    req.end();
+  });
+}
+
+function postJson(hostname, path, headers, body) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const req = https.request(
@@ -20,7 +52,7 @@ function post(hostname, path, headers, body) {
   });
 }
 
-function get(hostname, path, headers) {
+function getJson(hostname, path, headers) {
   return new Promise((resolve, reject) => {
     const req = https.request({ hostname, path, method: "GET", headers }, (res) => {
       let raw = "";
@@ -35,55 +67,84 @@ function get(hostname, path, headers) {
   });
 }
 
-function getHtml(hostname, path) {
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname, path, method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; LegAsk/1.0)",
-        "Accept": "application/json",
-        "Accept-Language": "fr-FR,fr;q=0.9"
-      }
-    }, (res) => {
-      let raw = "";
-      res.on("data", (c) => (raw += c));
-      res.on("end", () => resolve({ status: res.statusCode, body: raw }));
-    });
-    req.on("error", reject);
-    req.end();
-  });
+// ── Scraping Légifrance ───────────────────────────────────────────────────────
+async function scrapeDecision(pourvoi) {
+  const clean = pourvoi.trim();
+
+  // 1. Recherche sur Légifrance
+  const searchUrl = `https://www.legifrance.gouv.fr/search/juri?query=${encodeURIComponent(clean)}&searchField=ALL&tab_selection=juri&page=1`;
+  const searchRes = await httpRequest(searchUrl);
+
+  if (searchRes.status !== 200) throw new Error("Légifrance search HTTP " + searchRes.status);
+
+  // Extraire l'URL du premier résultat
+  const html = searchRes.body;
+  const linkMatch = html.match(/href="(\/juri\/id\/[^"]+)"/);
+  if (!linkMatch) {
+    // Essayer format alternatif
+    const altMatch = html.match(/href="([^"]*JURITEXT[^"]+)"/);
+    if (!altMatch) throw new Error("Aucun résultat trouvé sur Légifrance");
+    var decisionUrl = "https://www.legifrance.gouv.fr" + altMatch[1];
+  } else {
+    var decisionUrl = "https://www.legifrance.gouv.fr" + linkMatch[1];
+  }
+
+  // 2. Récupérer la page de la décision
+  const decisionRes = await httpRequest(decisionUrl);
+  if (decisionRes.status !== 200) throw new Error("Légifrance decision HTTP " + decisionRes.status);
+
+  const decisionHtml = decisionRes.body;
+
+  // 3. Extraire les métadonnées et le texte
+  // Date
+  const dateMatch = decisionHtml.match(/(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i);
+  const date = dateMatch ? `${dateMatch[1]} ${dateMatch[2].toLowerCase()} ${dateMatch[3]}` : "";
+
+  // Chambre
+  const chambrePatterns = [
+    /première chambre civile/i,
+    /deuxième chambre civile/i,
+    /troisième chambre civile/i,
+    /chambre commerciale/i,
+    /chambre sociale/i,
+    /chambre criminelle/i,
+    /assemblée plénière/i,
+    /chambre mixte/i
+  ];
+  let chamber = "";
+  for (const p of chambrePatterns) {
+    if (p.test(decisionHtml)) { chamber = decisionHtml.match(p)[0]; break; }
+  }
+
+  // Solution
+  const solutionMatch = decisionHtml.match(/(cassation|rejet|irrecevabilité|déchéance)/i);
+  const solution = solutionMatch ? solutionMatch[1].toLowerCase() : "";
+
+  // Texte principal — extraire le contenu entre balises article/section
+  let text = "";
+  const articleMatch = decisionHtml.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+  if (articleMatch) {
+    text = articleMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  } else {
+    // Fallback : extraire tout le texte visible
+    const bodyMatch = decisionHtml.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+    if (bodyMatch) {
+      text = bodyMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    }
+  }
+
+  if (!text || text.length < 100) throw new Error("Texte de la décision trop court");
+
+  return { text, date, chamber, solution, url: decisionUrl };
 }
 
-// Recherche sur l'API publique Judilibre (sans auth, endpoint public)
-async function fetchFromJudilibre(pourvoi) {
-  const clean = pourvoi.trim().replace(/\s/g, "");
-  
-  // Endpoint public Judilibre sans authentification
-  const path = `/cassation/judilibre/v1.0/search?query=${encodeURIComponent(clean)}&type=arret&page_size=1&page=0`;
-  
-  const res = await getHtml("api.judilibre.io", path);
-  if (res.status !== 200) throw new Error("Judilibre public " + res.status);
-  
-  const data = JSON.parse(res.body);
-  const results = data.results || [];
-  if (!results.length) throw new Error("Décision introuvable");
-  
-  const d = results[0];
-  return {
-    text: d.text || d.summary || "",
-    date: d.decision_date || d.date || "",
-    chamber: d.chamber || d.formation || "",
-    solution: d.solution || "",
-    number: d.number || pourvoi
-  };
-}
-
+// ── Supabase exemples ─────────────────────────────────────────────────────────
 async function getExamples() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
   const host = SUPABASE_URL.replace("https://", "");
-  const res = await get(host, "/rest/v1/exemples?select=*&order=validated_at.desc&limit=5", {
+  const res = await getJson(host, "/rest/v1/exemples?select=*&order=validated_at.desc&limit=5", {
     "apikey": SUPABASE_KEY,
     "Authorization": `Bearer ${SUPABASE_KEY}`,
     "Content-Type": "application/json"
@@ -92,16 +153,7 @@ async function getExamples() {
   return Array.isArray(res.body) ? res.body : [];
 }
 
-// Extraire la date du texte officiel
-function extractDate(text) {
-  if (!text) return null;
-  // Format : "Audience publique du 17 février 2021" ou "le 17 février 2021"
-  const months = {janvier:1,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,août:8,septembre:9,octobre:10,novembre:11,décembre:12};
-  const m = text.match(/(?:du|le)\s+(\d{1,2})\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)\s+(\d{4})/i);
-  if (m) return `${m[1].padStart(2,'0')} ${m[2].toLowerCase()} ${m[3]}`;
-  return null;
-}
-
+// ── Handler ───────────────────────────────────────────────────────────────────
 exports.handler = async (event) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -119,21 +171,21 @@ exports.handler = async (event) => {
     const GEMINI_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_KEY) throw new Error("Clé Gemini manquante");
 
-    // 1. Récupérer le texte officiel
+    // 1. Scraper Légifrance
     let decisionData = null;
     let source = "model";
     try {
-      decisionData = await fetchFromJudilibre(pourvoi);
-      source = "judilibre";
-      console.log("Judilibre OK:", pourvoi, "date:", decisionData.date);
+      decisionData = await scrapeDecision(pourvoi);
+      source = "legifrance";
+      console.log("Scraping OK:", pourvoi, "date:", decisionData.date, "chamber:", decisionData.chamber);
     } catch(e) {
-      console.log("Judilibre indisponible:", e.message);
+      console.log("Scraping échoué:", e.message);
     }
 
     // 2. Exemples Supabase
     const examples = await getExamples();
     const exPrompt = examples.length
-      ? "\n\n---\nEXEMPLES DE FICHES VALIDÉES (reproduire ce style et ce niveau de précision) :\n" +
+      ? "\n\n---\nEXEMPLES DE FICHES VALIDÉES (reproduire ce style exactement) :\n" +
         examples.slice(0, 3).map(e =>
           `PRÉSENTATION: ${e.presentation}\nFAITS: ${e.faits}\nPROCÉDURE: ${e.procedure}\nTHÈSE: ${e.these}\nQUESTION: ${e.question}\nSOLUTION: ${e.solution}`
         ).join("\n---\n")
@@ -142,59 +194,50 @@ exports.handler = async (event) => {
     // 3. Contexte décision
     let decisionContext = "";
     if (decisionData && decisionData.text) {
-      const extractedDate = extractDate(decisionData.text) || decisionData.date;
-      decisionContext = `\n\nTEXTE OFFICIEL DE LA DÉCISION (Judilibre) — utiliser ces informations en priorité absolue, NE PAS inventer d'autres dates :\nDate EXACTE et OBLIGATOIRE à utiliser : ${extractedDate}\nChambre : ${decisionData.chamber}\nSolution officielle : ${decisionData.solution}\nTexte intégral (la date figure dans les premières lignes) :\n${decisionData.text.slice(0, 8000)}`;
+      decisionContext = `
+
+TEXTE INTÉGRAL OFFICIEL DE LA DÉCISION (source : Légifrance) :
+Date EXACTE : ${decisionData.date}
+Chambre : ${decisionData.chamber}
+Solution : ${decisionData.solution}
+URL source : ${decisionData.url}
+
+TEXTE :
+${decisionData.text.slice(0, 9000)}
+
+INSTRUCTION ABSOLUE : utilise UNIQUEMENT les informations du texte ci-dessus. Ne jamais inventer ni compléter avec ta mémoire. La date dans la présentation DOIT être "${decisionData.date}".`;
     } else {
-      decisionContext = `\n\nATTENTION : texte officiel indisponible. Génère depuis tes connaissances en étant très prudent sur les dates et informations factuelles. Indique "À vérifier sur Légifrance" si incertain.`;
+      decisionContext = `
+
+ATTENTION : le texte officiel est indisponible. Génère depuis tes connaissances en étant TRÈS prudent. Indique "À vérifier sur Légifrance" pour chaque information incertaine, notamment la date.`;
     }
 
-    const prompt = `Tu es un juriste expert en droit privé français. Tu rédiges des fiches d'arrêt de la Cour de cassation de très haute qualité pédagogique et professionnelle.
+    const prompt = `Tu es un juriste expert en droit privé français. Tu rédiges des fiches d'arrêt de la Cour de cassation de très haute qualité.
 
 Réponds UNIQUEMENT avec un JSON valide sans backticks ni texte autour :
 {"presentation":"...","faits":"...","procedure":"...","these":"...","question":"...","solution":"...","type_arret":"cassation ou rejet"}
 
-## RÈGLES MÉTHODOLOGIQUES STRICTES
+RÈGLES MÉTHODOLOGIQUES :
 
-### 1. PRÉSENTATION
-Une seule phrase : "L'arrêt rendu par la [chambre complète] de la Cour de cassation le [date complète au format jour mois année] traite de [notion juridique centrale en 5-10 mots]."
-- Utiliser la date EXACTE fournie dans le texte officiel
-- Chambre complète : "première chambre civile", "chambre commerciale, financière et économique", "chambre sociale", etc.
-- Sujet = notion juridique, pas les faits
+1. PRÉSENTATION : "L'arrêt rendu par la [chambre complète] de la Cour de cassation le [date exacte du texte officiel] traite de [notion juridique]."
 
-### 2. FAITS
-Exposé factuel rigoureux, chronologique, en 3 à 6 phrases :
-- Commencer OBLIGATOIREMENT par "En l'espèce,"
-- Qualifier chaque partie par sa qualité juridique PRÉCISE : vendeur/acquéreur, bailleur/preneur, prêteur/emprunteur, créancier/débiteur, promettant/bénéficiaire, cédant/cessionnaire, mandant/mandataire, employeur/salarié, caution/débiteur principal...
-- JAMAIS de noms propres ni de noms de société
-- EXCLURE tout acte de procédure
+2. FAITS : Commencer par "En l'espèce,". Qualifier les parties juridiquement. Jamais de noms propres. Pas de procédure.
 
-### 3. PROCÉDURE
-- Juridiction de première instance si connue, par qui et pour quoi
-- Les juges de première instance rendent des JUGEMENTS ; la cour d'appel et la Cour de cassation rendent des ARRÊTS
-- La cour d'appel CONFIRME ou INFIRME le jugement
-- Décision et motifs précis de la cour d'appel
-- Qui forme le pourvoi en cassation
+3. PROCÉDURE : Chronologie des instances. Jugements en 1ère instance, arrêts en appel et cassation. Motifs de la CA. Qui se pourvoit.
 
-### 4. THÈSE EN PRÉSENCE
-RÈGLE ABSOLUE selon le type d'arrêt :
-- CASSATION → motifs de la COUR D'APPEL que la Cour va censurer. Commencer par "Pour [statuer ainsi], la cour d'appel a retenu que..."
-- REJET → arguments du DEMANDEUR AU POURVOI. Commencer par "Le demandeur au pourvoi fait grief à l'arrêt d'avoir [décision contestée]. Il soutient que..."
+4. THÈSE :
+   - CASSATION → motifs de la CA : "La cour d'appel a retenu que..."
+   - REJET → arguments du demandeur : "Le demandeur au pourvoi fait grief..."
 
-### 5. QUESTION DE DROIT
-- Une seule phrase interrogative abstraite, sans noms propres
-- Appelle une réponse par oui ou non
-- Formulée comme un principe général
+5. QUESTION DE DROIT : Une phrase abstraite, sans noms propres, appelant oui/non.
 
-### 6. SOLUTION
-"La [chambre complète] de la Cour de cassation répond par la [affirmative/négative] et [casse et annule l'arrêt / rejette le pourvoi] [au visa de l'article X — si cassation] au motif que [motif précis et complet]."
-- CASSATION : visa obligatoire
-- REJET : pas de visa
+6. SOLUTION : "La [chambre] répond par la [affirmative/négative] et [casse/rejette] [au visa de l'article X si cassation] au motif que [motif]."
 ${exPrompt}
 ${decisionContext}
 
 Numéro de pourvoi : ${pourvoi}`;
 
-    const geminiRes = await post(
+    const geminiRes = await postJson(
       "generativelanguage.googleapis.com",
       `/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
       { "Content-Type": "application/json" },
